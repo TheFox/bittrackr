@@ -1,0 +1,10 @@
+{
+    "convert": "EUR",
+    "currenies": [
+        "BTC",
+        "ETH",
+        "LTC",
+        "SOL",
+        "XRP"
+    ]
+}
