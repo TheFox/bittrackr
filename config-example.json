@@ -1,10 +1,21 @@
 {
+    "update_interval": 60,
+    "history_length": 5,
     "convert": "EUR",
-    "currenies": [
+    "symbols": [
         "BTC",
         "ETH",
         "LTC",
         "SOL",
         "XRP"
+    ],
+    "data_providers": [
+        {
+            "id": "cmc",
+            "api": {
+                "host": "sandbox-api.coinmarketcap.com",
+                "key": "b54bcf4d-1bca-4e8e-9a24-22ff2c3d462c"
+            }
+        }
     ]
 }
