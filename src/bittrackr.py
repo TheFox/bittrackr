@@ -125,8 +125,10 @@ class App():
             row_c += 1
 
             history = ''.join(list(map(_m, coin['history'])))
-            out = '{:4s} {:>8.2f} {}'.format(sym, coin['quote_price'], history)
-            row_width = max(row_width, len(out))
+            #out_t = '{:4s} {:>8.2f} {}'.format(sym, coin['quote_price'], history)
+            out_r = '{:4s} {:>8.2f}{} {}'.format(sym, coin['quote_price'], rs.all, history)
+            row_width = max(row_width, len(out_r) - 3)
+            #print(f'-> len {len(out_t)} {len(out_r)}')
 
             if coin['direction'] == 1:
                 fg_color = fg.green
@@ -135,7 +137,7 @@ class App():
             else:
                 fg_color = fg.black
 
-            row_s = fg_color + out + rs.all
+            row_s = fg_color + out_r
             print(row_s, end='', flush=True)
             sleep(0.1)
             print(f'\033[{column_base}G', end='', flush=True)
