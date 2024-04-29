@@ -44,8 +44,6 @@ class App():
                 'symbol': sym,
                 'direction': 0,
                 'prev_price': None,
-                'prev_volume_24h': None,
-                'diff_volume_24h': 0.0,
                 'dp': {
                     'quote_price': None,
                     'last_updated': None,
@@ -119,10 +117,6 @@ class App():
                         else:
                             self.data[sym]['direction'] = 0
 
-                    if self.data[sym]['prev_volume_24h'] is not None:
-                        self.data[sym]['diff_volume_24h'] = self.data[sym]['dp']['volume_24h'] - self.data[sym]['prev_volume_24h']
-                    self.data[sym]['prev_volume_24h'] = self.data[sym]['dp']['volume_24h']
-
                     self.data[sym]['prev_price'] = self.data[sym]['dp']['quote_price']
             else:
                 raise ValueError(f'Unknown data provider: {dp["id"]}')
@@ -134,26 +128,18 @@ class App():
         now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         print(f'Last update: {now}')
         print()
-        print('SYM     PRICE     24P%     24V%              24V           24V/LU')
-        print('-----------------------------------------------------------------')
+        print('SYM     PRICE      24%     24V%              24V')
+        print('------------------------------------------------')
 
-        row_width = 0
-        row_c = 0
-        column_c = 0
-        column_base = 1
         for sym, coin in self.data.items():
-            row_c += 1
-
-            out_r = '{:4s} {:>8.2f}{} {:>8.2f} {:>8.2f} {:>16.2f} {:>16.2f}'.format(
+            out_r = '{:4s} {:>8.2f}{} {:>8.2f} {:>8.2f} {:>16.2f}'.format(
                 sym,
                 coin['dp']['quote_price'],
                 rs.all,
                 coin['dp']['percent_change_24h'],
                 coin['dp']['volume_change_24h'],
                 coin['dp']['volume_24h'],
-                coin['diff_volume_24h'],
             )
-            row_width = max(row_width, len(out_r) - 3)
 
             if coin['direction'] == 1:
                 fg_color = fg.green
@@ -165,23 +151,15 @@ class App():
             row_s = fg_color + out_r
             print(row_s, end='', flush=True)
             sleep(0.1)
-            print(f'\033[{column_base}G', end='', flush=True)
+            print('\033[1G', end='', flush=True)
             sleep(0.05)
             print('\033[1B', end='', flush=True)
             sleep(0.1)
-
-            if row_c == self.screen['lines']:
-                column_c += 1
-                column_base += row_width + 3
-
-                print(f'\033[1;{column_base}H', end='', flush=True)
-                sleep(0.1)
 
             if not self.running:
                 break
 
         print('\033[1E', end='', flush=True)
-
 
     def shutdown(self, reason: str):
         print()
