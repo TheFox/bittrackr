@@ -50,6 +50,7 @@ class App():
                     'volume_24h': None,
                     'volume_change_24h': None,
                     'percent_change_24h': None,
+                    'market_cap_dominance': None,
                 },
             }
 
@@ -108,6 +109,7 @@ class App():
                     self.data[sym]['dp']['volume_24h'] = fiat_quote['volume_24h']
                     self.data[sym]['dp']['volume_change_24h'] = fiat_quote['volume_change_24h']
                     self.data[sym]['dp']['percent_change_24h'] = fiat_quote['percent_change_24h']
+                    self.data[sym]['dp']['market_cap_dominance'] = fiat_quote['market_cap_dominance']
 
                     if self.data[sym]['prev_price'] is not None:
                         if self.data[sym]['dp']['quote_price'] > self.data[sym]['prev_price']:
@@ -128,17 +130,18 @@ class App():
         now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         print(f'Last update: {now}')
         print()
-        print('SYM     PRICE      24%     24V%              24V')
-        print('------------------------------------------------')
+        print('SYM     PRICE      24%     24V%              24V  Dominance')
+        print('-----------------------------------------------------------')
 
         for sym, coin in self.data.items():
-            out_r = '{:4s} {:>8.2f}{} {:>8.2f} {:>8.2f} {:>16.2f}'.format(
+            out_r = '{:4s} {:>8.2f}{} {:>8.2f} {:>8.2f} {:>16.2f}     {:>6.2f}'.format(
                 sym,
                 coin['dp']['quote_price'],
                 rs.all,
                 coin['dp']['percent_change_24h'],
                 coin['dp']['volume_change_24h'],
                 coin['dp']['volume_24h'],
+                coin['dp']['market_cap_dominance'],
             )
 
             if coin['direction'] == 1:
