@@ -2,188 +2,104 @@
 
 import signal
 import argparse
-import shutil
 from json import loads
-from time import sleep
 from cmc import get_quotes as cmc_get_quotes
 from sty import fg, bg, ef, rs
 from datetime import datetime
-
-CLEAR_SCREEN='\033[2J'
-JUMP_BEGINNING='\033[1;1H'
+from pathlib import Path
 
 class App():
     config: dict
-    _max_updates: int
     running: bool
-    data: dict
-    screen: dict
 
-    def __init__(self, config_path: str|None, update_interval: int|None = None, max_updates: int|None = None):
+    def __init__(self, config_path: str|None):
         print(f'-> config path: {config_path}')
-        if config_path is None:
-            self.config = self._default_config()
-        else:
+
+        if config_path is not None:
             with open(config_path, 'r') as f:
-                config = loads(f.read())
+                self.config = loads(f.read())
 
-            dc = self._default_config()
-            self.config = {
-                **dc,
-                **config,
-            }
-
-        if update_interval is not None:
-            self.config['update_interval'] = update_interval
-
-        self._max_updates = max_updates
-
-        self.data = {}
-        for sym in self.config['symbols']:
-            self.data[sym] = {
-                'symbol': sym,
-                'direction': 0,
-                'prev_price': None,
-                'dp': {
-                    'quote_price': None,
-                    'last_updated': None,
-                    'volume_24h': None,
-                    'volume_change_24h': None,
-                    'percent_change_24h': None,
-                    'market_cap_dominance': None,
-                },
-            }
-
-        terminal = shutil.get_terminal_size((80, 20))
-        self.screen = {
-            'lines': terminal.lines,
-            'columns': terminal.columns,
-        }
-        # self.screen['lines'] = 3
-
-    def run(self):
+    def run(self, basedir: str):
         self.running = True
 
-        sleep_list = list(reversed(list(range(1, self.config['update_interval']))))
+        print(f'-> basedir: {basedir}')
+        data = self._traverse(Path(basedir))
 
-        # Clear screen
-        print(CLEAR_SCREEN, end='', flush=True)
-
-        # Jump to top left.
-        print(JUMP_BEGINNING, end='', flush=True)
-
-        cycle_n = 0
-        while self.running:
-            cycle_n += 1
-
-            self._data_update()
-            self._screen_update()
-
-            if self._max_updates is not None and cycle_n >= self._max_updates:
-                self.shutdown('max cycles reached')
-                break
-
-            print(f'update_interval={self.config["update_interval"]} cycle={cycle_n} mu={self._max_updates}')
-            for n in sleep_list:
-                print(f'  next update in {n}    \r', end='', flush=True)
-                sleep(1)
-                if not self.running:
-                    break
-            print('\033[2K', end='', flush=True)
-
-    def _data_update(self):
-        for dp in self.config['data_providers']:
-            if dp['id'] == 'cmc':
-                response = cmc_get_quotes(
-                    api_host=dp['api']['host'],
-                    api_key=dp['api']['key'],
-                    convert=self.config['convert'],
-                    symbols=self.config['symbols'],
-                )
-                for sym, sdata in response['data'].items():
-                    fsdata = sdata[0]
-                    fiat_quote = fsdata['quote'][self.config['convert']]
-
-                    self.data[sym]['dp']['quote_price'] = fiat_quote['price']
-                    self.data[sym]['dp']['last_updated'] = fiat_quote['last_updated']
-                    self.data[sym]['dp']['volume_24h'] = fiat_quote['volume_24h']
-                    self.data[sym]['dp']['volume_change_24h'] = fiat_quote['volume_change_24h']
-                    self.data[sym]['dp']['percent_change_24h'] = fiat_quote['percent_change_24h']
-                    self.data[sym]['dp']['market_cap_dominance'] = fiat_quote['market_cap_dominance']
-
-                    if self.data[sym]['prev_price'] is not None:
-                        if self.data[sym]['dp']['quote_price'] > self.data[sym]['prev_price']:
-                            self.data[sym]['direction'] = 1
-                        elif self.data[sym]['dp']['quote_price'] < self.data[sym]['prev_price']:
-                            self.data[sym]['direction'] = -1
-                        else:
-                            self.data[sym]['direction'] = 0
-
-                    self.data[sym]['prev_price'] = self.data[sym]['dp']['quote_price']
-            else:
-                raise ValueError(f'Unknown data provider: {dp["id"]}')
-
-    def _screen_update(self):
-        # Jump to top left.
-        print(JUMP_BEGINNING, end='', flush=True)
-
-        now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        print(f'Last update: {now}')
-        print()
-        print('SYM     PRICE      24%     24V%              24V  Dominance')
-        print('-----------------------------------------------------------')
-
-        for sym, coin in self.data.items():
-            out_r = '{:4s} {:>8.2f}{} {:>8.2f} {:>8.2f} {:>16.2f}     {:>6.2f}'.format(
-                sym,
-                coin['dp']['quote_price'],
-                rs.all,
-                coin['dp']['percent_change_24h'],
-                coin['dp']['volume_change_24h'],
-                coin['dp']['volume_24h'],
-                coin['dp']['market_cap_dominance'],
-            )
-
-            if coin['direction'] == 1:
-                fg_color = fg.green
-            elif coin['direction'] == -1:
-                fg_color = fg.red
-            else:
-                fg_color = fg.black
-
-            row_s = fg_color + out_r
-            print(row_s, end='', flush=True)
-            sleep(0.1)
-            print('\033[1G', end='', flush=True)
-            sleep(0.05)
-            print('\033[1B', end='', flush=True)
-            sleep(0.1)
-
-            if not self.running:
-                break
-
-        print('\033[1E', end='', flush=True)
+        print(f'-> data: {data}')
 
     def shutdown(self, reason: str):
         print()
         print(f'-> shutting down: {reason}')
         self.running = False
 
+    def _traverse(self, dir: Path, level: int = 0) -> dict:
+        print(f'-> dir: {dir.name}')
+        collection = {
+            'dir': dir.name,
+            'pairs': {},
+        }
+        for file in dir.iterdir():
+            if file.is_dir():
+                data = self._traverse(file, level + 1)
+                print(f'data: {data}')
+
+                for pair_id, pdata in data['pairs'].items():
+                    if pair_id not in collection['pairs']:
+                        collection['pairs'][pair_id] = {
+                            'transactions': [],
+                            'prices': [],
+                            'quantity': 0,
+                            'fee': 0,
+                            'locations': [],
+                        }
+
+                    collection['pairs'][pair_id]['transactions'].extend(data['transactions'])
+
+                    collection['pairs'][pair_id]['prices'].extend(data['prices'])
+
+                    collection['pairs'][pair_id]['quantity'] += data['quantity']
+                    collection['pairs'][pair_id]['fee'] += data['fee']
+
+                    collection['pairs'][pair_id]['locations'].extend(data['locations'])
+
+            else:
+                print(f'-> f: {file}')
+                with open(file, 'r') as f:
+                    json = loads(f.read())
+
+                if json['pair'] not in collection['pairs']:
+                    collection['pairs'][json['pair']] = {
+                        'transactions': [],
+                        'prices': [],
+                        'quantity': 0,
+                        'fee': 0,
+                        'locations': [],
+                    }
+
+                for transaction in json['transactions']:
+                    collection['pairs'][json['pair']]['transactions'].append(transaction)
+
+                    if transaction['type'] == 'buy':
+                        collection['pairs'][json['pair']]['quantity'] += transaction['quantity']
+                    elif transaction['type'] == 'sell':
+                        collection['pairs'][json['pair']]['quantity'] -= transaction['quantity']
+
+        return collection
+
 def main():
     parser = argparse.ArgumentParser(prog='bitportfolio', description='BitPortfolio')
     parser.add_argument('-c', '--config', type=str, nargs=1, required=False, help='Path to Config File', default=[None])
+    parser.add_argument('-d', '--basedir', type=str, nargs=1, required=False, help='Path to directory', default=[None])
 
     args = parser.parse_args()
     print(args)
 
-    app = App(
-        args.config[0],
-    )
+    app = App(args.config[0])
 
     signal.signal(signal.SIGINT, lambda sig, frame: app.shutdown('SIGINT'))
 
     try:
-        app.run()
+        app.run(args.basedir[0])
     except KeyboardInterrupt:
         app.shutdown('KeyboardInterrupt')
 
