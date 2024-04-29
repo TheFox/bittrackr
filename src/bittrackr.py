@@ -3,7 +3,6 @@
 import signal
 import argparse
 import shutil
-import os
 from json import loads
 from time import sleep
 from cmc import get_quotes as cmc_get_quotes
@@ -12,13 +11,6 @@ from datetime import datetime
 
 CLEAR_SCREEN='\033[2J'
 JUMP_BEGINNING='\033[1;1H'
-
-def _m(i: int) -> str:
-    if i == 1:
-        return '^'
-    if i == -1:
-        return 'v'
-    return '-'
 
 class App():
     config: dict
@@ -51,7 +43,6 @@ class App():
             self.data[sym] = {
                 'symbol': sym,
                 'direction': 0,
-                'history': [],
                 'prev_price': None,
                 'prev_volume_24h': None,
                 'diff_volume_24h': 0.0,
@@ -63,8 +54,6 @@ class App():
                     'percent_change_24h': None,
                 },
             }
-            if self.config['history']['enabled']:
-                self.data[sym]['history'] = ['-'] * self.config['history']['length']
 
         terminal = shutil.get_terminal_size((80, 20))
         self.screen = {
@@ -130,11 +119,6 @@ class App():
                         else:
                             self.data[sym]['direction'] = 0
 
-                        if self.config['history']['enabled']:
-                            if len(self.data[sym]['history']) >= self.config['history']['length']:
-                                self.data[sym]['history'].pop(0)
-                            self.data[sym]['history'].append(self.data[sym]['direction'])
-
                     if self.data[sym]['prev_volume_24h'] is not None:
                         self.data[sym]['diff_volume_24h'] = self.data[sym]['dp']['volume_24h'] - self.data[sym]['prev_volume_24h']
                     self.data[sym]['prev_volume_24h'] = self.data[sym]['dp']['volume_24h']
@@ -160,8 +144,7 @@ class App():
         for sym, coin in self.data.items():
             row_c += 1
 
-            history = ''.join(list(map(_m, coin['history'])))
-            out_r = '{:4s} {:>8.2f}{} {:>8.2f} {:>8.2f} {:>16.2f} {:>16.2f} {}'.format(
+            out_r = '{:4s} {:>8.2f}{} {:>8.2f} {:>8.2f} {:>16.2f} {:>16.2f}'.format(
                 sym,
                 coin['dp']['quote_price'],
                 rs.all,
@@ -169,7 +152,6 @@ class App():
                 coin['dp']['volume_change_24h'],
                 coin['dp']['volume_24h'],
                 coin['diff_volume_24h'],
-                history
             )
             row_width = max(row_width, len(out_r) - 3)
 
@@ -209,10 +191,6 @@ class App():
     def _default_config(self):
         return {
             'update_interval': 60,
-            'history': {
-                'enabled': False,
-                'length': 5,
-            },
             'convert': 'USD',
             'symbols': ['BTC'],
             'data_providers': [],
