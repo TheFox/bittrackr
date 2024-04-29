@@ -1,7 +1,11 @@
 {
     "update_interval": 60,
-    "history_length": 5,
     "convert": "EUR",
+    "history": {
+        "enabled": false,
+        "length": 60
+    },
+    "columns": false,
     "symbols": [
         "BTC",
         "ETH",
