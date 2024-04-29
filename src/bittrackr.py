@@ -14,7 +14,7 @@ JUMP_BEGINNING='\033[1;1H'
 
 class App():
     config: dict
-    _max_updates: int
+    _rest_updates: int
     running: bool
     data: dict
     screen: dict
@@ -36,7 +36,10 @@ class App():
         if update_interval is not None:
             self.config['update_interval'] = update_interval
 
-        self._max_updates = max_updates
+        if max_updates is None:
+            self._rest_updates = 999999
+        else:
+            self._rest_updates = max_updates
 
         self.data = {}
         for sym in self.config['symbols']:
@@ -73,17 +76,20 @@ class App():
         print(JUMP_BEGINNING, end='', flush=True)
 
         cycle_n = 0
-        while self.running:
+        while self.running and self._rest_updates > 0:
             cycle_n += 1
 
             self._data_update()
             self._screen_update()
 
-            if self._max_updates is not None and cycle_n >= self._max_updates:
-                self.shutdown('max cycles reached')
+            self._rest_updates -= 1
+
+            print(f'update_interval={self.config["update_interval"]} rest_updates={self._rest_updates}')
+
+            if self._rest_updates == 0:
+                self.shutdown('max updates reached')
                 break
 
-            print(f'update_interval={self.config["update_interval"]} cycle={cycle_n} mu={self._max_updates}')
             for n in sleep_list:
                 print(f'  next update in {n}    \r', end='', flush=True)
                 sleep(1)
