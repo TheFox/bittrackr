@@ -2,7 +2,7 @@
 
 import signal
 import argparse
-from json import loads
+from json import loads, dumps
 from cmc import get_quotes as cmc_get_quotes
 from sty import fg, bg, ef, rs
 from datetime import datetime
@@ -15,9 +15,11 @@ class App():
     def __init__(self, config_path: str|None):
         print(f'-> config path: {config_path}')
 
-        if config_path is not None:
-            with open(config_path, 'r') as f:
-                self.config = loads(f.read())
+        if config_path is None:
+            raise Exception('Config file not provided')
+
+        with open(config_path, 'r') as f:
+            self.config = loads(f.read())
 
     def run(self, basedir: str):
         self.running = True
@@ -25,7 +27,13 @@ class App():
         print(f'-> basedir: {basedir}')
         data = self._traverse(Path(basedir))
 
-        print(f'-> data: {data}')
+        unique_symbols = set()
+        for pair_id, pdata in data['pairs'].items():
+            unique_symbols.add(pdata['sell_symbol'])
+            unique_symbols.add(pdata['buy_symbol'])
+        self.quotes = self._get_quotes(unique_symbols)
+
+        self._print_data(data)
 
     def shutdown(self, reason: str):
         print()
@@ -41,50 +49,92 @@ class App():
         for file in dir.iterdir():
             if file.is_dir():
                 data = self._traverse(file, level + 1)
-                print(f'data: {data}')
 
                 for pair_id, pdata in data['pairs'].items():
                     if pair_id not in collection['pairs']:
                         collection['pairs'][pair_id] = {
+                            'sell_symbol': pdata['sell_symbol'],
+                            'buy_symbol': pdata['buy_symbol'],
+                            'symbols': [],
                             'transactions': [],
                             'prices': [],
-                            'quantity': 0,
-                            'fee': 0,
+                            'quantity': 0.0,
+                            'fees': 0.0,
                             'locations': [],
                         }
 
-                    collection['pairs'][pair_id]['transactions'].extend(data['transactions'])
+                    collection['pairs'][pair_id]['symbols'].extend(pdata['symbols'])
+                    collection['pairs'][pair_id]['transactions'].extend(pdata['transactions'])
 
-                    collection['pairs'][pair_id]['prices'].extend(data['prices'])
+                    collection['pairs'][pair_id]['prices'].extend(pdata['prices'])
 
-                    collection['pairs'][pair_id]['quantity'] += data['quantity']
-                    collection['pairs'][pair_id]['fee'] += data['fee']
+                    collection['pairs'][pair_id]['quantity'] += pdata['quantity']
+                    collection['pairs'][pair_id]['fees'] += pdata['fees']
 
-                    collection['pairs'][pair_id]['locations'].extend(data['locations'])
+                    collection['pairs'][pair_id]['locations'].extend(pdata['locations'])
 
             else:
                 print(f'-> f: {file}')
                 with open(file, 'r') as f:
                     json = loads(f.read())
 
-                if json['pair'] not in collection['pairs']:
-                    collection['pairs'][json['pair']] = {
+                pair = json['pair']
+                sell_symbol, buy_symbol = pair.split('/')
+
+                if pair not in collection['pairs']:
+                    collection['pairs'][pair] = {
+                        'sell_symbol': sell_symbol,
+                        'buy_symbol': buy_symbol,
+                        'symbols': [],
                         'transactions': [],
                         'prices': [],
-                        'quantity': 0,
-                        'fee': 0,
+                        'quantity': 0.0,
+                        'fees': 0.0,
                         'locations': [],
                     }
 
+                collection['pairs'][pair]['symbols'].append(sell_symbol)
+                collection['pairs'][pair]['symbols'].append(buy_symbol)
+
                 for transaction in json['transactions']:
-                    collection['pairs'][json['pair']]['transactions'].append(transaction)
+                    collection['pairs'][pair]['transactions'].append(transaction)
 
                     if transaction['type'] == 'buy':
-                        collection['pairs'][json['pair']]['quantity'] += transaction['quantity']
+                        collection['pairs'][pair]['quantity'] += transaction['quantity']
                     elif transaction['type'] == 'sell':
-                        collection['pairs'][json['pair']]['quantity'] -= transaction['quantity']
+                        collection['pairs'][pair]['quantity'] -= transaction['quantity']
+
+                    collection['pairs'][pair]['fees'] += transaction['fee']
+                    collection['pairs'][pair]['locations'].append(transaction['location'])
 
         return collection
+
+    def _get_quotes(self, symbols: list) -> dict:
+        print('-> get_quotes')
+        cmc_config = self.config['data_providers'][0]
+        return cmc_get_quotes(
+            api_host=cmc_config['api']['host'],
+            api_key=cmc_config['api']['key'],
+            convert=self.config['convert'],
+            symbols=symbols,
+        )
+
+    def _print_data(self, data: dict):
+        print('------------')
+        print(dumps(self.quotes, indent=4))
+        print('------------')
+        print(dumps(data, indent=4))
+        print('------------')
+
+        for pair_id, pdata in data['pairs'].items():
+            coin = self.quotes['data'][pdata['buy_symbol']]
+            print(f'-> pair: {pair_id}')
+            # print(f'-> symbols: {pdata["symbols"]}')
+            print(f'-> transactions: {len(pdata["transactions"])}')
+            print(f'-> quantity: {pdata["quantity"]}')
+            print(f'-> fees: {pdata["fees"]}')
+            # print(f'-> locations: {pdata["locations"]}')
+            print()
 
 def main():
     parser = argparse.ArgumentParser(prog='bitportfolio', description='BitPortfolio')
