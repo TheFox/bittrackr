@@ -1,0 +1,13 @@
+{
+    "pair": "EUR/BTC",
+    "transactions": [
+        {
+            "date": "2018-12-31",
+            "type": "buy",
+            "price": 20000,
+            "quantity": 30,
+            "fee": 1,
+            "location": "My Exchange"
+        }
+    ]
+}
