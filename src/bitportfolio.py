@@ -50,6 +50,7 @@ class App():
             'sell_symbols': [],
             'buy_symbols': [],
             'fees': 0.0,
+            'costs': 0.0,
             'value': 0.0,
             'locations': [],
             'pairs': {},
@@ -61,7 +62,8 @@ class App():
                 collection['symbols'].extend(data['symbols'])
                 collection['sell_symbols'].extend(data['sell_symbols'])
                 collection['buy_symbols'].extend(data['buy_symbols'])
-                collection['value'] += (data['value'])
+                collection['costs'] += data['costs']
+                collection['value'] += data['value']
 
                 for pair_id, pdata in data['pairs'].items():
                     if pair_id not in collection['pairs']:
@@ -70,17 +72,20 @@ class App():
                             'buy_symbol': pdata['buy_symbol'],
                             'quantity': 0.0,
                             'fees': 0.0,
+                            'costs': 0.0,
                             'value': 0.0,
                             'locations': [],
                             'transactions': [],
                         }
 
                     collection['fees'] += pdata['fees']
+                    collection['costs'] += pdata['costs']
                     collection['locations'].extend(pdata['locations'])
 
                     collection['pairs'][pair_id]['transactions'].extend(pdata['transactions'])
                     collection['pairs'][pair_id]['quantity'] += pdata['quantity']
                     collection['pairs'][pair_id]['fees'] += pdata['fees']
+                    collection['pairs'][pair_id]['costs'] += pdata['costs']
                     collection['pairs'][pair_id]['locations'].extend(pdata['locations'])
 
             else:
@@ -115,9 +120,8 @@ class App():
                     # print(transaction)
                     # print('---------------------------------')
 
-                    transaction['cost'] = transaction['price'] * transaction['quantity']
-
                     collection['fees'] += transaction['fee']
+                    transaction['cost'] = transaction['price'] * transaction['quantity'] + transaction['fee']
 
                     collection['pairs'][pair]['transactions'].append(transaction)
 
@@ -204,10 +208,11 @@ class App():
 
     def _print_data(self, data: dict):
         print('------------')
+        print(dumps(data, indent=2))
         print('SYM QUANTITY VALUE COST PROFIT')
 
         for pair_id, pdata in data['pairs'].items():
-            print(dumps(pdata, indent=2))
+
             # print(f'-> pair: {pair_id}')
             # print(f'-> transactions: {len(pdata["transactions"])}')
             # print(f'-> quantity: {pdata["quantity"]}')
