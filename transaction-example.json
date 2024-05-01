@@ -6,8 +6,9 @@
             "type": "buy",
             "price": 20000,
             "quantity": 30,
-            "fee": 1,
-            "location": "My Exchange"
+            "fee": [1.99, "EUR"],
+            "location": "My Exchange",
+            "note": "H4ck the W0rld"
         }
     ]
 }

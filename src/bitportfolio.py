@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 
 import signal
+import shutil
 from argparse import ArgumentParser, BooleanOptionalAction
 from json import loads, dumps
 from cmc import get_quotes as cmc_get_quotes
 from sty import fg, bg, ef, rs
 from datetime import datetime
 from pathlib import Path
+from portfolio import Portfolio, Transaction
 
 class App():
     config: dict
@@ -24,207 +26,114 @@ class App():
         with open(config_path, 'r') as f:
             self.config = loads(f.read())
 
-    def run(self, basedir: str, show_transactions: bool = False):
+    def run(self, basedir: Path, show_transactions: bool = False):
         self.running = True
 
-        print(f'-> basedir: {basedir}')
-        data = self._traverse(Path(basedir))
-        data = self._prepare(data)
+        print(f'-> basedir.name={basedir.name}')
 
-        symbols = data['buy_symbols']
-        print(f'-> symbols: {symbols}')
-        self.quotes = self._get_quotes(symbols)
-        data = self._calc_value(data)
+        portfolio = self._traverse(Path(basedir))
 
-        self._print_data(data)
+        self.quotes = self._get_quotes()
+
+        self._print_portfolio(portfolio, show_transactions)
 
     def shutdown(self, reason: str):
         print()
         print(f'-> shutting down: {reason}')
         self.running = False
 
-    def _traverse(self, dir: Path, level: int = 0) -> dict:
-        print(f'-> dir: {dir.name}')
-        collection = {
-            'symbols': [],
-            'sell_symbols': [],
-            'buy_symbols': [],
-            'fees': 0.0,
-            'costs': 0.0,
-            'value': 0.0,
-            'locations': [],
-            'pairs': {},
-        }
+    def _traverse(self, dir: Path, parent: Portfolio|None = None) -> Portfolio:
+        portfolio = Portfolio(name=dir.name, parent=parent)
+
         for file in dir.iterdir():
             if file.is_dir():
-                data = self._traverse(file, level + 1)
+                sub_portfolio = self._traverse(file, portfolio)
+                portfolio.add_portfolio(sub_portfolio)
 
-                collection['symbols'].extend(data['symbols'])
-                collection['sell_symbols'].extend(data['sell_symbols'])
-                collection['buy_symbols'].extend(data['buy_symbols'])
-                collection['costs'] += data['costs']
-                collection['value'] += data['value']
-
-                for pair_id, pdata in data['pairs'].items():
-                    if pair_id not in collection['pairs']:
-                        collection['pairs'][pair_id] = {
-                            'sell_symbol': pdata['sell_symbol'],
-                            'buy_symbol': pdata['buy_symbol'],
-                            'quantity': 0.0,
-                            'fees': 0.0,
-                            'costs': 0.0,
-                            'value': 0.0,
-                            'locations': [],
-                            'transactions': [],
-                        }
-
-                    collection['fees'] += pdata['fees']
-                    collection['costs'] += pdata['costs']
-                    collection['locations'].extend(pdata['locations'])
-
-                    collection['pairs'][pair_id]['transactions'].extend(pdata['transactions'])
-                    collection['pairs'][pair_id]['quantity'] += pdata['quantity']
-                    collection['pairs'][pair_id]['fees'] += pdata['fees']
-                    collection['pairs'][pair_id]['costs'] += pdata['costs']
-                    collection['pairs'][pair_id]['locations'].extend(pdata['locations'])
-
-            else:
+            elif file.is_file():
                 if not str(file).endswith('.json'):
                     continue
 
-                print(f'-> f: {file}')
                 with open(file, 'r') as f:
                     json = loads(f.read())
 
-                pair = json['pair']
-                sell_symbol, buy_symbol = pair.split('/')
+                print(f'-> file: {file}')
 
-                if pair not in collection['pairs']:
-                    collection['pairs'][pair] = {
-                        'sell_symbol': sell_symbol,
-                        'buy_symbol': buy_symbol,
-                        'quantity': 0.0,
-                        'fees': 0.0,
-                        'value': 0.0,
-                        'locations': [],
-                        'transactions': [],
-                    }
+                for transaction_j in json['transactions']:
+                    transaction_o = Transaction(pair=json['pair'], d=transaction_j)
 
-                collection['symbols'].append(sell_symbol)
-                collection['symbols'].append(buy_symbol)
-                collection['sell_symbols'].append(sell_symbol)
-                collection['buy_symbols'].append(buy_symbol)
+                    portfolio.add_transaction(transaction_o)
 
-                for transaction in json['transactions']:
-                    # print('---------- transaction ----------')
-                    # print(transaction)
-                    # print('---------------------------------')
+        return portfolio
 
-                    collection['fees'] += transaction['fee']
-                    transaction['cost'] = transaction['price'] * transaction['quantity'] + transaction['fee']
-
-                    collection['pairs'][pair]['transactions'].append(transaction)
-
-                    if transaction['type'] == 'buy':
-                        collection['pairs'][pair]['quantity'] += transaction['quantity']
-                    elif transaction['type'] == 'sell':
-                        collection['pairs'][pair]['quantity'] -= transaction['quantity']
-
-                    collection['pairs'][pair]['fees'] += transaction['fee']
-
-                    location = transaction.get('location')
-                    if location is not None:
-                        collection['pairs'][pair]['locations'].append(transaction['location'])
-                        collection['locations'].append(transaction['location'])
-
-        return collection
-
-    def _prepare(self, data: dict) -> dict:
-        print('-> _prepare')
-
-        symbols = set()
-        for sym in data['symbols']:
-            symbols.add(sym)
-        data['symbols'] = list(symbols)
-
-        sell_symbols = set()
-        for sym in data['sell_symbols']:
-            sell_symbols.add(sym)
-        data['sell_symbols'] = list(sell_symbols)
-
-        buy_symbols = set()
-        for sym in data['buy_symbols']:
-            buy_symbols.add(sym)
-        data['buy_symbols'] = list(buy_symbols)
-
-        locations = set()
-        for sym in data['locations']:
-            locations.add(sym)
-        data['locations'] = list(locations)
-
-        for pid, pdata in data['pairs'].items():
-            locations = set()
-            for sym in pdata['locations']:
-                locations.add(sym)
-            data['pairs'][pid]['locations'] = list(locations)
-
-            transactions = sorted(pdata['transactions'], key=lambda t: t['date'])
-            data['pairs'][pid]['transactions'] = transactions
-
-        return data
-
-    def _get_quotes(self, symbols: list) -> dict:
-        print(f'-> _get_quotes({symbols})')
+    def _get_quotes(self) -> dict:
+        print(f'-> _get_quotes()')
+        symbols = self.config['portfolio']['symbols']
         cmc_config = self.config['data_providers'][0]
-        data = cmc_get_quotes(
-            api_host=cmc_config['api']['host'],
-            api_key=cmc_config['api']['key'],
-            convert=self.config['convert'],
-            symbols=symbols,
-        )
+        # data = cmc_get_quotes(
+        #     api_host=cmc_config['api']['host'],
+        #     api_key=cmc_config['api']['key'],
+        #     convert=self.config['convert'],
+        #     symbols=symbols,
+        # )
+
         # print('----------- data -----------')
         # print(dumps(data, indent=2))
         # print('----------------------------')
-        return data
 
-    def _calc_value(self, data: dict):
-        print('-> _calc_value')
+        convert = self.config['convert']
 
-        for pid, pdata in data['pairs'].items():
-            quote = self.quotes['data'][pdata["buy_symbol"]][0]['quote'][self.config['convert']]['price']
-            data['pairs'][pid]['quote'] = quote
+        symbol_values = {}
+        # for symbol in symbols:
+        #     symbol_values[symbol] = data['data'][symbol][0]['quote'][convert]['price']
 
-            value = quote * pdata['quantity']
-            data['pairs'][pid]['value'] = value
+        # print('----- symbol_values -----')
+        # print(dumps(symbol_values, indent=2))
+        # print('----------------------------')
 
-            transactions = []
-            for transaction in pdata['transactions']:
-                transaction['value'] = quote * transaction['quantity']
-                transactions.append(transaction)
+        symbol_values['XRP'] = 5.0
 
-            data['pairs'][pid]['transactions'] = transactions
+        return symbol_values
 
-        return data
+    def _print_portfolio(self, portfolio: Portfolio, show_transactions: bool = False):
 
-    def _print_data(self, data: dict):
-        print('------------')
-        print(dumps(data, indent=2))
-        print('SYM QUANTITY VALUE COST PROFIT')
+        terminal = shutil.get_terminal_size((80, 20))
 
-        for pair_id, pdata in data['pairs'].items():
+        sell_symbols = ', '.join(list(portfolio.sell_symbols))
+        buy_symbols = ', '.join(list(portfolio.buy_symbols))
 
-            # print(f'-> pair: {pair_id}')
-            # print(f'-> transactions: {len(pdata["transactions"])}')
-            # print(f'-> quantity: {pdata["quantity"]}')
-            # print(f'-> fees: {pdata["fees"]}')
-            # print(f'-> locations: {pdata["locations"]}')
-            # print(f'-> value: {pdata["value"]}')
-            row = '{} {}  {:.2f}'.format(
-                pdata['buy_symbol'],
-                pdata['quantity'],
-                pdata['value'],
-            )
-            print(row)
+        print('-' * terminal.columns)
+        print(f'portfolio: {portfolio.name} (level={portfolio.level})')
+        print(f'    transactions: {portfolio.transactions_c}')
+        print(f'    sell symbols: {sell_symbols}')
+        print(f'    buy  symbols: {buy_symbols}')
+        # print(f'    quantity: {portfolio.quantity}')
+
+        # print('------------ quantity ------------')
+        # for sym, spot in portfolio.quantity.items():
+        #     print(f'      -----------------------')
+        #     print(f'      symbol: {spot.symbol}')
+        #     print(f'      quantity: {spot.quantity}')
+
+        #     if sym in self.config['portfolio']['symbols']:
+        #         spot_value = spot.calc_value(self.quotes)
+        #         print( '      value: {:.2f} {}'.format(spot_value, self.config['convert']))
+
+        for pname, pair in portfolio.pairs.items():
+            # if pair.quantity <= 0:
+            #     continue
+            print(f'      -----------------------')
+            print(f'      pair.name: {pair.name}')
+            print(f'      pair.sell: {pair.sell}')
+            print(f'      pair.buy: {pair.buy}')
+            print(f'      pair.price: {pair.price}')
+            print(f'      pair.prices: {pair.prices}')
+            print(f'      pair.quantity: {pair.quantity}')
+            print(f'      pair.cost_s: {pair.cost_s}')
+
+        subs = sorted(portfolio.subs, key=lambda p: p.name)
+        for sub_portfolio in subs:
+            self._print_portfolio(sub_portfolio)
 
 def main():
     parser = ArgumentParser(prog='bitportfolio', description='BitPortfolio')
@@ -239,8 +148,9 @@ def main():
 
     signal.signal(signal.SIGINT, lambda sig, frame: app.shutdown('SIGINT'))
 
+    basedir = Path(args.basedir[0])
     try:
-        app.run(args.basedir[0], args.transactions)
+        app.run(basedir, args.transactions)
     except KeyboardInterrupt:
         app.shutdown('KeyboardInterrupt')
 

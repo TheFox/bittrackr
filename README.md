@@ -1,5 +1,11 @@
 # BitTrackr — Get your FOMO on the Command-line
 
+## BitTracker
+
+```bash
+./bin/bittrackr.sh -c var/config.json -i 50 -u 60
+```
+
 ## Dev
 
 - <https://en.wikipedia.org/wiki/ANSI_escape_code>
