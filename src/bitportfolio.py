@@ -9,6 +9,7 @@ from sty import fg, bg, ef, rs
 from datetime import datetime
 from pathlib import Path
 from portfolio import Portfolio, Transaction
+#from transaction import Transaction
 
 class App():
     config: dict
