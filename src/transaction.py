@@ -32,24 +32,33 @@ class Transaction():
 
         self.ttype = getattr(self, 'type')
 
-        self.pair = Pair()
-        self.pair.name = self.pair_s
-        self.pair.sell = self.sell_symbol
-        self.pair.buy = self.buy_symbol
-        self.pair.price = self.price
-        self.pair.quantity = self.quantity
+        pair = Pair()
+        pair.name = self.pair_s
+        pair.sell = self.sell_symbol
+        pair.buy = self.buy_symbol
+        pair.price = self.price
+        pair.quantity = self.quantity
+
+        q = self.price * self.quantity
+        pair.sell_spot = Spot(s=self.sell_symbol,q=q)
+
+        pair.buy_spot = Spot(s=self.buy_symbol,q=self.quantity)
+
+        self.pair = pair
 
         if self.ttype == 'buy':
-            q = self.price * self.quantity
-            sell_spot = Spot(s=self.sell_symbol, q=q)
-            self.pair.add_spot(sell_spot)
+            pass
+            # q = self.price * self.quantity
+            # sell_spot = Spot(s=self.sell_symbol, q=q)
+            # self.pair.add_spot(sell_spot)
 
-            buy_spot = Spot(s=self.buy_symbol, q=self.quantity)
-            self.pair.add_spot(buy_spot)
+            # buy_spot = Spot(s=self.buy_symbol, q=self.quantity)
+            # self.pair.add_spot(buy_spot)
         elif self.ttype == 'sell':
-            sell_spot = Spot(s=self.sell_symbol, q=self.quantity)
-            self.pair.add_spot(sell_spot)
+            pass
+            # sell_spot = Spot(s=self.sell_symbol, q=self.quantity)
+            # self.pair.add_spot(sell_spot)
 
-            q = self.price * self.quantity
-            buy_spot = Spot(s=self.buy_symbol, q=q)
-            self.pair.add_spot(buy_spot)
+            # q = self.price * self.quantity
+            # buy_spot = Spot(s=self.buy_symbol, q=q)
+            # self.pair.add_spot(buy_spot)

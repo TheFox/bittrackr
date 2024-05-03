@@ -33,6 +33,7 @@ class App():
         print(f'-> basedir.name={basedir.name}')
 
         portfolio = self._traverse(Path(basedir))
+        portfolio.calc()
 
         self.quotes = self._get_quotes()
 
@@ -108,33 +109,25 @@ class App():
         print(f'    transactions: {portfolio.transactions_c}')
         print(f'    sell symbols: {sell_symbols}')
         print(f'    buy  symbols: {buy_symbols}')
-        # print(f'    quantity: {portfolio.quantity}')
-
-        # print('------------ quantity ------------')
-        # for sym, spot in portfolio.quantity.items():
-        #     print(f'      -----------------------')
-        #     print(f'      symbol: {spot.symbol}')
-        #     print(f'      quantity: {spot.quantity}')
-
-        #     if sym in self.config['portfolio']['symbols']:
-        #         spot_value = spot.calc_value(self.quotes)
-        #         print( '      value: {:.2f} {}'.format(spot_value, self.config['convert']))
+        #print(f'    pairs: {portfolio.pairs}')
 
         for pname, pair in portfolio.pairs.items():
             # if pair.quantity <= 0:
             #     continue
-            print(f'      -----------------------')
-            print(f'      pair.name: {pair.name}')
-            print(f'      pair.sell: {pair.sell}')
-            print(f'      pair.buy: {pair.buy}')
-            print(f'      pair.price: {pair.price}')
-            print(f'      pair.prices: {pair.prices}')
-            print(f'      pair.quantity: {pair.quantity}')
-            print(f'      pair.cost_s: {pair.cost_s}')
 
-        subs = sorted(portfolio.subs, key=lambda p: p.name)
-        for sub_portfolio in subs:
-            self._print_portfolio(sub_portfolio)
+            print(f'---------------------------')
+            print(f'    pair.name: {pair.name}')
+            # print(f'    pair.sell: {pair.sell}')
+            # print(f'    pair.buy: {pair.buy}')
+            print(f'    pair.sell_spot: {pair.sell_spot}')
+            print(f'    pair.buy_spot: {pair.buy_spot}')
+
+        for sym, spot in portfolio.totals.items():
+            print(f'-> total: {spot}')
+
+        # subs = sorted(portfolio.subs, key=lambda p: p.name)
+        # for sub_portfolio in subs:
+        #     self._print_portfolio(sub_portfolio)
 
 def main():
     parser = ArgumentParser(prog='bitportfolio', description='BitPortfolio')
