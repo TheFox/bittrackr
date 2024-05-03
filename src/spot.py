@@ -21,8 +21,3 @@ class Spot():
 
     def sub_spot(self, spot: 'Spot'):
         self.quantity -= spot.quantity
-
-    def calc_value(self, quotes: dict) -> float:
-        if not self.symbol in quotes:
-            return 0.0
-        return quotes[self.symbol] * self.quantity

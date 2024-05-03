@@ -14,7 +14,6 @@ class Portfolio():
     transactions: list[Transaction]
     transactions_c: int
     subs: list['Portfolio']
-    quantity: dict[str, Spot]
     pairs: dict[str, Pair]
     totals: dict[str, Spot]
 
@@ -31,7 +30,6 @@ class Portfolio():
         self.transactions = []
         self.transactions_c = 0
         self.subs = []
-        self.quantity = {}
         self.pairs = {}
 
     def add_portfolio(self, portfolio: 'Portfolio'):
@@ -70,18 +68,14 @@ class Portfolio():
             self.parent.count_buy_symbols(symbol)
 
     def add_pair(self, tpair: Pair, ttype: str):
-        #q = tpair.quantity * d
-        #print(f'-> add_pair {self.name} n={tpair.name} q={tpair.quantity}/{q} d={d}')
-
         if tpair.name in self.pairs:
-            print('-> already in portfolio pairs')
+            # print('-> already in portfolio pairs')
             ppair = self.pairs[tpair.name]
         else:
-            print('-> new portfolio pair')
-            ppair = Pair()
-            ppair.name = tpair.name
-            ppair.sell_spot = Spot(tpair.sell)
-            ppair.buy_spot = Spot(tpair.buy)
+            # print('-> new portfolio pair')
+            ppair = Pair(tpair.name)
+            ppair.sell_spot = Spot(tpair.sell_spot.symbol)
+            ppair.buy_spot = Spot(tpair.buy_spot.symbol)
 
             self.pairs[ppair.name] = ppair
 
@@ -89,20 +83,19 @@ class Portfolio():
 
         if ttype == 'buy':
             ppair.add_buy(tpair)
+
         elif ttype == 'sell':
             ppair.add_sell(tpair)
-
-        #self.pairs[tpair.name].calc_cost()
 
         if self.parent is not None:
             self.parent.add_pair(tpair, ttype)
 
     def calc(self):
-        print(f'-> calc({self.name})')
+        # print(f'-> calc({self.name})')
 
         self.totals = {}
         for pair_id, pair in self.pairs.items():
-            print(f'-> pair {pair_id}=>{pair}')
+            # print(f'-> pair {pair_id}=>{pair}')
 
             if pair.sell_spot.symbol not in self.totals:
                 self.totals[pair.sell_spot.symbol] = Spot(pair.sell_spot.symbol)
@@ -110,18 +103,18 @@ class Portfolio():
             if pair.buy_spot.symbol not in self.totals:
                 self.totals[pair.buy_spot.symbol] = Spot(pair.buy_spot.symbol)
 
-        print(f'-> self.totals={self.totals}')
+        # print(f'-> self.totals={self.totals}')
 
         for sym, spot in self.totals.items():
             for pair_id, pair in self.pairs.items():
 
                 if sym == pair.sell_spot.symbol:
-                    print(f'-> sym({sym}) is sell spot: {pair.sell_spot}')
+                    # print(f'-> sym({sym}) is sell spot: {pair.sell_spot}')
 
                     spot.sub_q(pair.sell_spot.quantity)
 
                 elif sym == pair.buy_spot.symbol:
-                    print(f'-> sym({sym}) is buy spot: {pair.buy_spot}')
+                    # print(f'-> sym({sym}) is buy spot: {pair.buy_spot}')
 
                     spot.add_q(pair.buy_spot.quantity)
 

@@ -123,11 +123,13 @@ class App():
             print(f'    pair.buy_spot: {pair.buy_spot}')
 
         for sym, spot in portfolio.totals.items():
+            if spot.quantity == 0.0:
+                continue
             print(f'-> total: {spot}')
 
-        # subs = sorted(portfolio.subs, key=lambda p: p.name)
-        # for sub_portfolio in subs:
-        #     self._print_portfolio(sub_portfolio)
+        subs = sorted(portfolio.subs, key=lambda p: p.name)
+        for sub_portfolio in subs:
+            self._print_portfolio(sub_portfolio)
 
 def main():
     parser = ArgumentParser(prog='bitportfolio', description='BitPortfolio')
