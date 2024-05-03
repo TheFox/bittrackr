@@ -15,7 +15,7 @@ class Portfolio():
     transactions_c: int
     subs: list['Portfolio']
     pairs: dict[str, Pair]
-    totals: dict[str, Spot]
+    holdings: dict[str, Spot]
 
     def __init__(self, name: str, parent: None = None):
         self.name = name
@@ -93,19 +93,19 @@ class Portfolio():
     def calc(self):
         # print(f'-> calc({self.name})')
 
-        self.totals = {}
+        self.holdings = {}
         for pair_id, pair in self.pairs.items():
             # print(f'-> pair {pair_id}=>{pair}')
 
-            if pair.sell_spot.symbol not in self.totals:
-                self.totals[pair.sell_spot.symbol] = Spot(pair.sell_spot.symbol)
+            if pair.sell_spot.symbol not in self.holdings:
+                self.holdings[pair.sell_spot.symbol] = Spot(pair.sell_spot.symbol)
 
-            if pair.buy_spot.symbol not in self.totals:
-                self.totals[pair.buy_spot.symbol] = Spot(pair.buy_spot.symbol)
+            if pair.buy_spot.symbol not in self.holdings:
+                self.holdings[pair.buy_spot.symbol] = Spot(pair.buy_spot.symbol)
 
-        # print(f'-> self.totals={self.totals}')
+        # print(f'-> self.holdings={self.holdings}')
 
-        for sym, spot in self.totals.items():
+        for sym, spot in self.holdings.items():
             for pair_id, pair in self.pairs.items():
 
                 if sym == pair.sell_spot.symbol:
