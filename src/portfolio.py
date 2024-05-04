@@ -2,6 +2,7 @@
 from spot import Spot
 from pair import Pair
 from transaction import Transaction
+from apptypes import Quotes
 
 class Portfolio():
     parent: 'Portfolio'
@@ -11,7 +12,7 @@ class Portfolio():
     sell_symbols: set
     buy_symbols: set
     fees: float
-    transactions: list[Transaction]
+    #transactions: list[Transaction]
     transactions_c: int
     subs: list['Portfolio']
     pairs: dict[str, Pair]
@@ -27,7 +28,7 @@ class Portfolio():
         self.symbols = set()
         self.sell_symbols = set()
         self.buy_symbols = set()
-        self.transactions = []
+        #self.transactions = []
         self.transactions_c = 0
         self.subs = []
         self.pairs = {}
@@ -40,7 +41,7 @@ class Portfolio():
 
         self.add_pair(transaction.pair, transaction.ttype)
 
-        self.transactions.append(transaction)
+        #self.transactions.append(transaction)
 
         self.count_transactions()
         self.count_sell_symbols(transaction.sell_symbol)
@@ -91,7 +92,7 @@ class Portfolio():
             self.parent.add_pair(tpair, ttype)
 
     def calc(self):
-        # print(f'-> calc({self.name})')
+        print(f'-> calc({self.name})')
 
         self.holdings = {}
         for pair_id, pair in self.pairs.items():
@@ -103,7 +104,7 @@ class Portfolio():
             if pair.buy_spot.symbol not in self.holdings:
                 self.holdings[pair.buy_spot.symbol] = Spot(pair.buy_spot.symbol)
 
-        # print(f'-> self.holdings={self.holdings}')
+        print(f'-> self.holdings={self.holdings}')
 
         for sym, spot in self.holdings.items():
             for pair_id, pair in self.pairs.items():
@@ -120,3 +121,9 @@ class Portfolio():
 
         for sub_portfolio in self.subs:
             sub_portfolio.calc()
+
+    def quotes(self, quotes: Quotes):
+        print(f'-> quotes({self.name})')
+
+        for sub_portfolio in self.subs:
+            sub_portfolio.quotes(quotes)

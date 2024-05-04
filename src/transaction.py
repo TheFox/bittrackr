@@ -32,11 +32,7 @@ class Transaction():
 
         self.ttype = getattr(self, 'type')
 
-        pair = Pair(self.pair_s)
-        # pair.sell = self.sell_symbol
-        # pair.buy = self.buy_symbol
-        # pair.price = self.price
-        # pair.quantity = self.quantity
+        pair: Pair = Pair(self.pair_s)
 
         q = self.price * self.quantity
         pair.sell_spot = Spot(s=self.sell_symbol,q=q)

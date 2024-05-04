@@ -1,9 +1,15 @@
 # BitTrackr — Get your FOMO on the Command-line
 
-## BitTracker
+## Quotes Ticker
 
 ```bash
 ./bin/bittrackr.sh -c var/config.json -i 50 -u 60
+```
+
+## Portfolio
+
+```bash
+./bin/bitportfolio.sh -c var/config.json -d var/portfolios
 ```
 
 ## Dev

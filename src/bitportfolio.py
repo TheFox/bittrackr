@@ -18,15 +18,12 @@ class App():
     data_provider_id: str|None
     config: dict
     running: bool
-    quotes: dict
 
     def __init__(self, config_path: str|None, show_transactions: bool = False, data_provider_id: str = 'cmc'):
         print(f'-> config path: {config_path}')
 
         self.show_transactions = show_transactions
         self.data_provider_id = data_provider_id
-
-        self.quotes = {}
 
         if config_path is None:
             raise Exception('Config file not provided')
@@ -42,13 +39,15 @@ class App():
         portfolio = self._traverse(Path(basedir))
         portfolio.calc()
 
-        self.quotes = self._get_quotes()
+        quotes = self._get_quotes()
+        portfolio.quotes(quotes)
 
         self._print_portfolio(portfolio)
 
     def shutdown(self, reason: str):
         print()
         print(f'-> shutting down: {reason}')
+
         self.running = False
 
     def _traverse(self, dir: Path, parent: Portfolio|None = None) -> Portfolio:
@@ -92,7 +91,7 @@ class App():
                         config = dp_config
                         break
 
-        data = {'data': {}}
+        data = None
         if config is not None:
             f = getattr(sys.modules[__name__], f'{config["id"]}_get_quotes')
             print(f'f = {f}')
@@ -110,9 +109,13 @@ class App():
         convert = self.config['convert']
 
         symbol_values: Quotes = {}
-        for symbol in symbols:
-            if symbol in data['data']:
-                symbol_values[symbol] = data['data'][symbol][0]['quote'][convert]['price']
+        if data is not None:
+            for symbol in symbols:
+                if symbol in data['data']:
+                    sdata = data['data'][symbol]
+                    first_q = sdata[0]
+                    if convert in first_q['quote']:
+                        symbol_values[symbol] = first_q['quote'][convert]['price']
 
         print('----- symbol_values -----')
         print(dumps(symbol_values, indent=2))
