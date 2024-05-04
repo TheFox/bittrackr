@@ -102,11 +102,7 @@ class Portfolio():
             sub_portfolio.calc()
 
     def quotes(self, quotes: Quotes):
-        # print(f'-> quotes({self.name})')
-
         for sym, spot in self.holdings.items():
-            # print(f'-> sym {sym} {spot}')
-
             if spot.symbol in quotes:
                 quote = quotes[spot.symbol]
                 spot.quote = quote

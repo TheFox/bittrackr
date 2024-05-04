@@ -107,6 +107,9 @@ class App():
                     symbols=self.config['symbols'],
                 )
                 for sym, sdata in response['data'].items():
+                    if len(sdata) == 0:
+                        continue
+
                     fsdata = sdata[0]
                     fiat_quote = fsdata['quote'][self.config['convert']]
 

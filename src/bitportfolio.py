@@ -5,8 +5,9 @@ import signal
 import shutil
 import pandas as pd
 
+from os.path import exists
 from argparse import ArgumentParser, BooleanOptionalAction
-from json import loads, dumps
+from json import loads, load, dumps, dump
 from cmc import get_quotes as cmc_get_quotes
 from sty import fg, bg, ef, rs
 from datetime import datetime
@@ -22,10 +23,11 @@ class App():
     config: dict
     running: bool
 
-    def __init__(self, config_path: str|None, show_transactions: bool = False, data_provider_id: str = 'cmc'):
+    def __init__(self, config_path: str|None, show_transactions: bool = False, data_provider_id: str = 'cmc', quotes_file: str|None = None):
         self.terminal = shutil.get_terminal_size((80, 20))
         self.show_transactions = show_transactions
         self.data_provider_id = data_provider_id
+        self.quotes_file = quotes_file
 
         if config_path is None:
             raise Exception('Config file not provided')
@@ -74,7 +76,12 @@ class App():
         return portfolio
 
     def _get_quotes(self) -> Quotes:
-        symbols = self.config['portfolio']['symbols']
+        symbols = None
+        if 'portfolio' in self.config:
+            if 'symbols' in self.config['portfolio']:
+                symbols = self.config['portfolio']['symbols']
+        if symbols is None:
+            symbols = self.config['symbols']
 
         config = None
         for dp_config in self.config['data_providers']:
@@ -91,7 +98,6 @@ class App():
         data = None
         if config is not None:
             f = getattr(sys.modules[__name__], f'{config["id"]}_get_quotes')
-            print(f'f = {f}')
             data = f(
                 api_host=config['api']['host'],
                 api_key=config['api']['key'],
@@ -105,8 +111,14 @@ class App():
 
         convert = self.config['convert']
 
+        load_quotes = False
         symbol_values: Quotes = {}
-        if data is not None:
+        if data is None:
+            if self.quotes_file is not None and exists(self.quotes_file):
+                with open(self.quotes_file, 'r') as f:
+                    symbol_values = load(f)
+                load_quotes = True
+        else:
             for symbol in symbols:
                 if symbol in data['data']:
                     sdata = data['data'][symbol]
@@ -114,18 +126,17 @@ class App():
                     if convert in first_q['quote']:
                         symbol_values[symbol] = first_q['quote'][convert]['price']
 
-        # print('----- symbol_values -----')
+        # print(f'----- symbol_values ({load_quotes}) -----')
         # print(dumps(symbol_values, indent=2))
         # print('----------------------------')
 
-        symbol_values['XRP'] = 5.0
+        if not load_quotes and self.quotes_file is not None:
+            with open(self.quotes_file, 'w') as f:
+                dump(symbol_values, f, indent=2)
 
         return symbol_values
 
     def _print_portfolio(self, portfolio: Portfolio):
-
-
-
         sell_symbols = ', '.join(list(portfolio.sell_symbols))
         buy_symbols = ', '.join(list(portfolio.buy_symbols))
 
@@ -158,9 +169,7 @@ class App():
         if buy_symbols != '':
             print(f'Buy  symbols: {buy_symbols}')
 
-
-
-        print(f'Costs: {cost_spot.quantity} {cost_spot.symbol}')
+        print(f'Costs: {cost_spot.quantity:.2f} {cost_spot.symbol}')
 
         if len(holdings['sym']) > 0:
             df = pd.DataFrame(data=holdings)
@@ -184,11 +193,17 @@ def main():
     parser.add_argument('-d', '--basedir', type=str, nargs='?', required=False, help='Path to directory', default=[None])
     parser.add_argument('-p', '--dataprovider', type=str, nargs='?', required=False, help='ID', default='cmc')
     parser.add_argument('-t', '--transactions', action=BooleanOptionalAction, help='Show transactions', default=False)
+    parser.add_argument('-qf', '--quotes-file', type=str, nargs='?', required=False, help='Save/load quotes from file', default=None)
 
     args = parser.parse_args()
-    # print(args)
+    print(args)
 
-    app = App(args.config, args.transactions, args.dataprovider)
+    app = App(
+        config_path=args.config,
+        show_transactions=args.transactions,
+        data_provider_id=args.dataprovider,
+        quotes_file=args.quotes_file,
+    )
 
     signal.signal(signal.SIGINT, lambda sig, frame: app.shutdown('SIGINT'))
 
