@@ -22,9 +22,10 @@ class App():
     config: dict
     running: bool
 
-    def __init__(self, base_dir: str|None = None, config_path: str|None = None, show_transactions: bool = False, data_provider_id: str = 'cmc', quotes_file: str|None = None, change_dir: str|None = None):
+    def __init__(self, base_dir: str|None = None, config_path: str|None = None, show_transactions: bool = False, data_provider_id: str = 'cmc', quotes_file: str|None = None, change_dir: str|None = None, max_depth: int|None = None):
         self.terminal = shutil.get_terminal_size((80, 20))
 
+        self.running = False
         self.show_transactions = show_transactions
         self.data_provider_id = data_provider_id
 
@@ -58,6 +59,8 @@ class App():
             with open(self.config_path, 'r') as f:
                 self.config = loads(f.read())
 
+        self.max_depth = max_depth
+
     def run(self):
         self.running = True
 
@@ -75,12 +78,16 @@ class App():
 
         self.running = False
 
-    def _traverse(self, dir: Path, parent: Portfolio|None = None) -> Portfolio:
+    def _traverse(self, dir: Path, parent: Portfolio|None = None, level: int = 0) -> Portfolio:
         portfolio = Portfolio(name=dir.name, parent=parent)
 
         for file in dir.iterdir():
             if file.is_dir():
-                sub_portfolio = self._traverse(file, portfolio)
+                nlevel = level + 1
+                if self.max_depth is not None and nlevel >= self.max_depth:
+                    continue
+
+                sub_portfolio = self._traverse(file, portfolio, nlevel)
                 portfolio.add_portfolio(sub_portfolio)
 
             elif file.is_file():
@@ -218,6 +225,7 @@ def main():
     parser.add_argument('-t', '--transactions', action=BooleanOptionalAction, help='Show transactions', default=False)
     parser.add_argument('-qf', '--quotes-file', type=str, nargs='?', required=False, help='Save/load quotes from file')
     parser.add_argument('-C', '--changedir', type=str, nargs='?', required=False, help='Change directory and look for files')
+    parser.add_argument('-l', '--max-depth', type=int, nargs='?', required=False, help='Max directory depth')
 
     args = parser.parse_args()
     print(args)
@@ -229,6 +237,7 @@ def main():
         data_provider_id=args.dataprovider,
         quotes_file=args.quotes_file,
         change_dir=args.changedir,
+        max_depth=args.max_depth,
     )
 
     signal.signal(signal.SIGINT, lambda sig, frame: app.shutdown('SIGINT'))

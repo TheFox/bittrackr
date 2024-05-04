@@ -15,6 +15,7 @@ class Portfolio():
     transactions_c: int
     subs: list['Portfolio']
     pairs: dict[str, Pair]
+    # buy_costs: dict[str, ]
     holdings: dict[str, Spot]
 
     def __init__(self, name: str, parent: None = None):
@@ -30,6 +31,7 @@ class Portfolio():
         self.transactions_c = 0
         self.subs = []
         self.pairs = {}
+        # self.buy_costs = {}
 
     def add_portfolio(self, portfolio: 'Portfolio'):
         self.subs.append(portfolio)
@@ -60,6 +62,8 @@ class Portfolio():
             self.parent.count_buy_symbols(symbol)
 
     def add_pair(self, tpair: Pair, ttype: str):
+        print(f'-> add_pair({self.name},{tpair},{ttype})')
+
         if tpair.name in self.pairs:
             ppair = self.pairs[tpair.name]
         else:
@@ -74,6 +78,12 @@ class Portfolio():
 
         elif ttype == 'sell':
             ppair.add_sell(tpair)
+
+        # if self.config['convert'] == tpair.sell_spot.symbol:
+        #     if tpair.name not in self.buy_costs:
+        #         self.buy_costs[tpair.name] = []
+        #     self.buy_costs[tpair.name].append(tpair.sell_spot.quantity)
+        #     print(f'-> buy_costs: {self.buy_costs}')
 
         if self.parent is not None:
             self.parent.add_pair(tpair, ttype)
