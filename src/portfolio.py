@@ -85,8 +85,6 @@ class Portfolio():
 
         if ttype == 'buy':
             ppair.add_buy(tpair)
-            #ppair.buys.append(tpair.sell_spot.quantity)
-
         elif ttype == 'sell':
             ppair.add_sell(tpair)
 
@@ -94,12 +92,11 @@ class Portfolio():
             self.parent.add_pair(tpair, ttype)
 
     def calc(self):
-        print(f'-> calc({self.name})')
-        # print(f'-> self.pairs: {self.pairs}')
+        # print(f'-> calc({self.name})')
 
         self.holdings = {}
         for pair_id, pair in self.pairs.items():
-            print(f'-> pair: {pair}')
+            # print(f'-> pair: {pair}')
 
             if pair.sell_spot.symbol not in self.holdings:
                 self.holdings[pair.sell_spot.symbol] = Spot(pair.sell_spot.symbol)
@@ -115,35 +112,22 @@ class Portfolio():
         # print(f'------------------------')
 
         for sym, holding in self.holdings.items():
-            print(f'-> holding: {sym}, {holding}')
+            # print(f'-> holding: {sym}, {holding}')
 
             for pair_id, pair in self.pairs.items():
-                print(f'->    pair: {pair_id}, {pair}')
+                # print(f'->    pair: {pair_id}, {pair}')
 
                 if sym == pair.sell_spot.symbol:
-                    print(f'->      sell_spot: {pair.sell_spot}')
+                    # print(f'->      sell_spot: {pair.sell_spot}')
                     holding.sub_spot(pair.sell_spot)
-                    #holding.avg.append(pair.sell_spot)
-
-                    s = 0
-                    x = 0
-                    for n in pair.buys:
-                        s += n
-                        x += 1
-                    a = s / x
-
-                    holding.avg_s = f'{a:.2f} {pair.sell_spot.symbol}'
-                    print(f'->      holding: {holding}')
-
 
                 elif sym == pair.buy_spot.symbol:
-                    print(f'->      buy_spot: {pair.buy_spot}')
+                    # print(f'->      buy_spot: {pair.buy_spot}')
                     holding.add_spot(pair.buy_spot)
-                    # spot.avg.append(pair.buy_spot)
 
-        print(f'------- holdings -------')
-        print(dumps(self.holdings, indent=2, cls=ComplexEncoder))
-        print(f'------------------------')
+        # print('------- holdings -------')
+        # print(dumps(self.holdings, indent=2, cls=ComplexEncoder))
+        # print('------------------------')
 
         for sub_portfolio in self.subs:
             sub_portfolio.calc()

@@ -68,9 +68,9 @@ class App():
         portfolio = self._traverse(self.base_dir)
         portfolio.calc()
 
-        print(f'------- portfolio -------')
+        print('------- portfolio -------')
         print(dumps(portfolio, indent=2, cls=ComplexEncoder))
-        print(f'------------------------')
+        print('------------------------')
 
         quotes = self._get_quotes()
         portfolio.quotes(quotes)
@@ -178,10 +178,9 @@ class App():
         cost_spot = Spot(s=self.config['convert'])
         holdings = {
             'sym': [],
-            'holding': [],
             'quote': [],
+            'holding': [],
             'value': [],
-            'avg': [],
         }
         for sym, spot in portfolio.holdings.items():
             if spot.quantity == 0.0:
@@ -191,10 +190,9 @@ class App():
                 cost_spot.quantity = spot.quantity
             else:
                 holdings['sym'].append(spot.symbol)
-                holdings['holding'].append(spot.quantity)
                 holdings['quote'].append(spot.quote)
+                holdings['holding'].append(spot.quantity)
                 holdings['value'].append(spot.value)
-                holdings['avg'].append(spot.avg_s)
 
         print()
         print('-' * self.terminal.columns)
