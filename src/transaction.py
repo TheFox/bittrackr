@@ -33,7 +33,7 @@ class Transaction():
             setattr(self, key, value)
 
         self.ttype = getattr(self, 'type')
-        print(f'-> Transaction({self.ttype}) fee: {self.fee}')
+        #print(f'-> Transaction({self.ttype}) fee: {self.fee}')
 
         if self.fee is not None:
             if len(self.fee) == 2:

@@ -5,7 +5,6 @@ import signal
 import shutil
 import pandas as pd
 
-from os.path import exists
 from argparse import ArgumentParser, BooleanOptionalAction
 from json import loads, load, dumps, dump
 from cmc import get_quotes as cmc_get_quotes
@@ -23,22 +22,46 @@ class App():
     config: dict
     running: bool
 
-    def __init__(self, config_path: str|None, show_transactions: bool = False, data_provider_id: str = 'cmc', quotes_file: str|None = None):
+    def __init__(self, base_dir: str|None = None, config_path: str|None = None, show_transactions: bool = False, data_provider_id: str = 'cmc', quotes_file: str|None = None, change_dir: str|None = None):
         self.terminal = shutil.get_terminal_size((80, 20))
+
         self.show_transactions = show_transactions
         self.data_provider_id = data_provider_id
-        self.quotes_file = quotes_file
+
+        if change_dir is None:
+            self.change_dir = Path('.')
+        else:
+            self.change_dir = Path(change_dir)
+
+        if base_dir is None:
+            self.base_dir = self.change_dir / 'portfolios'
+        else:
+            print(f'-> base_dir: {base_dir}')
+            self.base_dir = Path(base_dir)
 
         if config_path is None:
-            raise Exception('Config file not provided')
+            self.config_path = self.change_dir / 'config.json'
+        else:
+            self.config_path = Path(config_path)
 
-        with open(config_path, 'r') as f:
-            self.config = loads(f.read())
+        if quotes_file is None:
+            self.quotes_file = None
+        else:
+            self.quotes_file = Path(quotes_file)
 
-    def run(self, basedir: Path):
+        print(f'-> change_dir: {self.change_dir}')
+        print(f'-> base_dir: {self.base_dir}')
+        print(f'-> config_path: {self.config_path}')
+        print(f'-> quotes_file: {self.quotes_file}')
+
+        if self.config_path.exists():
+            with open(self.config_path, 'r') as f:
+                self.config = loads(f.read())
+
+    def run(self):
         self.running = True
 
-        portfolio = self._traverse(Path(basedir))
+        portfolio = self._traverse(self.base_dir)
         portfolio.calc()
 
         quotes = self._get_quotes()
@@ -114,7 +137,7 @@ class App():
         load_quotes = False
         symbol_values: Quotes = {}
         if data is None:
-            if self.quotes_file is not None and exists(self.quotes_file):
+            if self.quotes_file is not None and self.quotes_file.exists():
                 with open(self.quotes_file, 'r') as f:
                     symbol_values = load(f)
                 load_quotes = True
@@ -189,27 +212,29 @@ def main():
     #pd.options.display.float_format = '{:,.2f}'.format
 
     parser = ArgumentParser(prog='bitportfolio', description='BitPortfolio')
-    parser.add_argument('-c', '--config', type=str, nargs='?', required=False, help='Path to Config File', default=[None])
-    parser.add_argument('-d', '--basedir', type=str, nargs='?', required=False, help='Path to directory', default=[None])
+    parser.add_argument('-c', '--config', type=str, nargs='?', required=False, help='Path to Config File')
+    parser.add_argument('-d', '--basedir', type=str, nargs='?', required=False, help='Path to directory')
     parser.add_argument('-p', '--dataprovider', type=str, nargs='?', required=False, help='ID', default='cmc')
     parser.add_argument('-t', '--transactions', action=BooleanOptionalAction, help='Show transactions', default=False)
-    parser.add_argument('-qf', '--quotes-file', type=str, nargs='?', required=False, help='Save/load quotes from file', default=None)
+    parser.add_argument('-qf', '--quotes-file', type=str, nargs='?', required=False, help='Save/load quotes from file')
+    parser.add_argument('-C', '--changedir', type=str, nargs='?', required=False, help='Change directory and look for files')
 
     args = parser.parse_args()
     print(args)
 
     app = App(
+        base_dir=args.basedir,
         config_path=args.config,
         show_transactions=args.transactions,
         data_provider_id=args.dataprovider,
         quotes_file=args.quotes_file,
+        change_dir=args.changedir,
     )
 
     signal.signal(signal.SIGINT, lambda sig, frame: app.shutdown('SIGINT'))
 
-    basedir = Path(args.basedir)
     try:
-        app.run(basedir)
+        app.run()
     except KeyboardInterrupt:
         app.shutdown('KeyboardInterrupt')
 
