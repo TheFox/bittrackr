@@ -6,6 +6,29 @@ from transaction import Transaction
 from apptypes import Quotes
 from json_helper import ComplexEncoder
 
+class Holding(Spot):
+    quote: float
+    value: float
+    transactions: list[Transaction]
+
+    def __init__(self, s: str, q: float = 0.0):
+        super().__init__(s, q)
+        self.quote = None
+        self.value = None
+        self.transactions = []
+
+    def to_json(self):
+        return {
+            'symbol': self.symbol,
+            'quantity': self.quantity,
+            'quote': self.quote,
+            'value': self.value,
+            'transactions': self.transactions,
+        }
+
+    def add_transaction(self, transaction: Transaction):
+        self.transactions.append(transaction)
+
 class Portfolio():
     parent: 'Portfolio'
     name: str
@@ -18,7 +41,7 @@ class Portfolio():
     subs: list['Portfolio']
     pairs: dict[str, Pair]
     # buy_costs: dict[str, ]
-    holdings: dict[str, Spot]
+    holdings: dict[str, Holding]
 
     def __init__(self, name: str, parent: None = None):
         self.name = name
@@ -47,31 +70,17 @@ class Portfolio():
         self.subs.append(portfolio)
 
     def add_transaction(self, transaction: Transaction):
-        self.add_pair(transaction.pair, transaction.ttype)
+        ppair = self.add_pair(transaction.pair, transaction.ttype)
+        ppair.add_transaction(transaction)
 
-        self.count_transactions()
-        self.count_sell_symbols(transaction.sell_symbol)
-        self.count_buy_symbols(transaction.buy_symbol)
-
-    def count_transactions(self):
         self.transactions_c += 1
+        self.sell_symbols.add(transaction.sell_symbol)
+        self.buy_symbols.add(transaction.buy_symbol)
 
         if self.parent is not None:
-            self.parent.count_transactions()
+            self.parent.add_transaction(transaction)
 
-    def count_sell_symbols(self, symbol: str):
-        self.sell_symbols.add(symbol)
-
-        if self.parent is not None:
-            self.parent.count_sell_symbols(symbol)
-
-    def count_buy_symbols(self, symbol: str):
-        self.buy_symbols.add(symbol)
-
-        if self.parent is not None:
-            self.parent.count_buy_symbols(symbol)
-
-    def add_pair(self, tpair: Pair, ttype: str):
+    def add_pair(self, tpair: Pair, ttype: str) -> Pair:
         print(f'-> add_pair({self.name},{tpair},{ttype})')
 
         if tpair.name in self.pairs:
@@ -88,8 +97,7 @@ class Portfolio():
         elif ttype == 'sell':
             ppair.add_sell(tpair)
 
-        if self.parent is not None:
-            self.parent.add_pair(tpair, ttype)
+        return ppair
 
     def calc(self):
         # print(f'-> calc({self.name})')
@@ -99,10 +107,16 @@ class Portfolio():
             # print(f'-> pair: {pair}')
 
             if pair.sell_spot.symbol not in self.holdings:
-                self.holdings[pair.sell_spot.symbol] = Spot(pair.sell_spot.symbol)
+                holding = Holding(pair.sell_spot.symbol)
+                holding.transactions = pair.transactions
+
+                self.holdings[pair.sell_spot.symbol] = holding
 
             if pair.buy_spot.symbol not in self.holdings:
-                self.holdings[pair.buy_spot.symbol] = Spot(pair.buy_spot.symbol)
+                holding = Holding(pair.buy_spot.symbol)
+                holding.transactions = pair.transactions
+
+                self.holdings[pair.buy_spot.symbol] = holding
 
         # print(f'-> self.holdings: {self.holdings}')
 

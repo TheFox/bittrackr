@@ -50,3 +50,14 @@ class Transaction():
         pair.buy_spot = Spot(s=self.buy_symbol, q=self.quantity)
 
         self.pair = pair
+
+    def __repr__(self):
+        return f'Transaction[{self.pair_s},{self.ttype},{self.price},{self.quantity}]'
+
+    def to_json(self):
+        return {
+            'pair': self.pair_s,
+            'type': self.ttype,
+            'price': self.price,
+            'quantity': self.quantity,
+        }
