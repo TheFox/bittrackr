@@ -3,6 +3,8 @@
 import sys
 import signal
 import shutil
+import pandas as pd
+
 from argparse import ArgumentParser, BooleanOptionalAction
 from json import loads, dumps
 from cmc import get_quotes as cmc_get_quotes
@@ -11,6 +13,7 @@ from datetime import datetime
 from pathlib import Path
 from portfolio import Portfolio
 from transaction import Transaction
+from spot import Spot
 from apptypes import Quotes
 
 class App():
@@ -20,8 +23,7 @@ class App():
     running: bool
 
     def __init__(self, config_path: str|None, show_transactions: bool = False, data_provider_id: str = 'cmc'):
-        print(f'-> config path: {config_path}')
-
+        self.terminal = shutil.get_terminal_size((80, 20))
         self.show_transactions = show_transactions
         self.data_provider_id = data_provider_id
 
@@ -33,8 +35,6 @@ class App():
 
     def run(self, basedir: Path):
         self.running = True
-
-        print(f'-> basedir.name={basedir.name}')
 
         portfolio = self._traverse(Path(basedir))
         portfolio.calc()
@@ -65,8 +65,6 @@ class App():
                 with open(file, 'r') as f:
                     json = loads(f.read())
 
-                print(f'-> file: {file}')
-
                 for pair in json:
                     for transaction_j in pair['transactions']:
                         transaction_o = Transaction(pair=pair['pair'], d=transaction_j)
@@ -76,7 +74,6 @@ class App():
         return portfolio
 
     def _get_quotes(self) -> Quotes:
-        print(f'-> _get_quotes()')
         symbols = self.config['portfolio']['symbols']
 
         config = None
@@ -102,9 +99,9 @@ class App():
                 symbols=symbols,
             )
 
-            print('----------- data -----------')
-            print(dumps(data, indent=2))
-            print('----------------------------')
+            # print('----------- data -----------')
+            # print(dumps(data, indent=2))
+            # print('----------------------------')
 
         convert = self.config['convert']
 
@@ -117,9 +114,9 @@ class App():
                     if convert in first_q['quote']:
                         symbol_values[symbol] = first_q['quote'][convert]['price']
 
-        print('----- symbol_values -----')
-        print(dumps(symbol_values, indent=2))
-        print('----------------------------')
+        # print('----- symbol_values -----')
+        # print(dumps(symbol_values, indent=2))
+        # print('----------------------------')
 
         symbol_values['XRP'] = 5.0
 
@@ -127,43 +124,61 @@ class App():
 
     def _print_portfolio(self, portfolio: Portfolio):
 
-        terminal = shutil.get_terminal_size((80, 20))
+
 
         sell_symbols = ', '.join(list(portfolio.sell_symbols))
         buy_symbols = ', '.join(list(portfolio.buy_symbols))
 
-        print('-' * terminal.columns)
-        print(f'portfolio: {portfolio.name} (level={portfolio.level})')
-        print(f'    transactions: {portfolio.transactions_c}')
-        if sell_symbols != '':
-            print(f'    sell symbols: {sell_symbols}')
-        if buy_symbols != '':
-            print(f'    buy  symbols: {buy_symbols}')
-
-        for pname, pair in portfolio.pairs.items():
-            print(f'---------------------------')
-            print(f'    pair.name: {pair.name}')
-            print(f'    pair.sell_spot: {pair.sell_spot}')
-            print(f'    pair.buy_spot: {pair.buy_spot}')
-
-        costs = []
+        cost_spot = Spot(s=self.config['convert'])
+        holdings = {
+            'sym': [],
+            'holding': [],
+            'quote': [],
+            'value': [],
+        }
         for sym, spot in portfolio.holdings.items():
             if spot.quantity == 0.0:
                 continue
 
-            if spot.quantity <= 0:
-                costs.append(spot)
+            if spot.symbol == self.config['convert']:
+                cost_spot.quantity = spot.quantity
             else:
-                print(f'-> total: {spot}')
+                holdings['sym'].append(spot.symbol)
+                holdings['holding'].append(spot.quantity)
+                holdings['quote'].append(spot.quote)
+                holdings['value'].append(spot.value)
 
-        for spot in costs:
-            print(f'-> cost: {spot}')
+        print()
+        print('-' * self.terminal.columns)
+        print(f'Portfolio: {portfolio.name} (level={portfolio.level})')
+        print(f'Transactions: {portfolio.transactions_c}')
+
+        if sell_symbols != '':
+            print(f'Sell symbols: {sell_symbols}')
+        if buy_symbols != '':
+            print(f'Buy  symbols: {buy_symbols}')
+
+
+
+        print(f'Costs: {cost_spot.quantity} {cost_spot.symbol}')
+
+        if len(holdings['sym']) > 0:
+            df = pd.DataFrame(data=holdings)
+            df_s = df.to_string(index=False)
+            print()
+            print(df_s)
 
         subs = sorted(portfolio.subs, key=lambda p: p.name)
         for sub_portfolio in subs:
             self._print_portfolio(sub_portfolio)
 
 def main():
+    pd.set_option('display.width', None)
+    pd.set_option('display.max_colwidth', None)
+    pd.set_option('display.max_columns', None)
+    pd.set_option('display.max_rows', None)
+    #pd.options.display.float_format = '{:,.2f}'.format
+
     parser = ArgumentParser(prog='bitportfolio', description='BitPortfolio')
     parser.add_argument('-c', '--config', type=str, nargs='?', required=False, help='Path to Config File', default=[None])
     parser.add_argument('-d', '--basedir', type=str, nargs='?', required=False, help='Path to directory', default=[None])
@@ -171,7 +186,7 @@ def main():
     parser.add_argument('-t', '--transactions', action=BooleanOptionalAction, help='Show transactions', default=False)
 
     args = parser.parse_args()
-    print(args)
+    # print(args)
 
     app = App(args.config, args.transactions, args.dataprovider)
 

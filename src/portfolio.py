@@ -79,7 +79,7 @@ class Portfolio():
             self.parent.add_pair(tpair, ttype)
 
     def calc(self):
-        print(f'-> calc({self.name})')
+        # print(f'-> calc({self.name})')
 
         self.holdings = {}
         for pair_id, pair in self.pairs.items():
@@ -102,7 +102,15 @@ class Portfolio():
             sub_portfolio.calc()
 
     def quotes(self, quotes: Quotes):
-        print(f'-> quotes({self.name})')
+        # print(f'-> quotes({self.name})')
+
+        for sym, spot in self.holdings.items():
+            # print(f'-> sym {sym} {spot}')
+
+            if spot.symbol in quotes:
+                quote = quotes[spot.symbol]
+                spot.quote = quote
+                spot.value = quote * spot.quantity
 
         for sub_portfolio in self.subs:
             sub_portfolio.quotes(quotes)
