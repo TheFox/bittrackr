@@ -16,6 +16,7 @@
     },
     "data_providers": [
         {
+            "enabled": true,
             "id": "cmc",
             "api": {
                 "host": "sandbox-api.coinmarketcap.com",

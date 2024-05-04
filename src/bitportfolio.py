@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import sys
 import signal
 import shutil
 from argparse import ArgumentParser, BooleanOptionalAction
@@ -8,16 +9,22 @@ from cmc import get_quotes as cmc_get_quotes
 from sty import fg, bg, ef, rs
 from datetime import datetime
 from pathlib import Path
-from portfolio import Portfolio, Transaction
-#from transaction import Transaction
+from portfolio import Portfolio
+from transaction import Transaction
+from apptypes import Quotes
 
 class App():
+    show_transactions: bool
+    data_provider_id: str|None
     config: dict
     running: bool
     quotes: dict
 
-    def __init__(self, config_path: str|None):
+    def __init__(self, config_path: str|None, show_transactions: bool = False, data_provider_id: str = 'cmc'):
         print(f'-> config path: {config_path}')
+
+        self.show_transactions = show_transactions
+        self.data_provider_id = data_provider_id
 
         self.quotes = {}
 
@@ -27,7 +34,7 @@ class App():
         with open(config_path, 'r') as f:
             self.config = loads(f.read())
 
-    def run(self, basedir: Path, show_transactions: bool = False):
+    def run(self, basedir: Path):
         self.running = True
 
         print(f'-> basedir.name={basedir.name}')
@@ -37,7 +44,7 @@ class App():
 
         self.quotes = self._get_quotes()
 
-        self._print_portfolio(portfolio, show_transactions)
+        self._print_portfolio(portfolio)
 
     def shutdown(self, reason: str):
         print()
@@ -61,43 +68,61 @@ class App():
 
                 print(f'-> file: {file}')
 
-                for transaction_j in json['transactions']:
-                    transaction_o = Transaction(pair=json['pair'], d=transaction_j)
+                for pair in json:
+                    for transaction_j in pair['transactions']:
+                        transaction_o = Transaction(pair=pair['pair'], d=transaction_j)
 
-                    portfolio.add_transaction(transaction_o)
+                        portfolio.add_transaction(transaction_o)
 
         return portfolio
 
-    def _get_quotes(self) -> dict:
+    def _get_quotes(self) -> Quotes:
         print(f'-> _get_quotes()')
         symbols = self.config['portfolio']['symbols']
-        cmc_config = self.config['data_providers'][0]
-        # data = cmc_get_quotes(
-        #     api_host=cmc_config['api']['host'],
-        #     api_key=cmc_config['api']['key'],
-        #     convert=self.config['convert'],
-        #     symbols=symbols,
-        # )
 
-        # print('----------- data -----------')
-        # print(dumps(data, indent=2))
-        # print('----------------------------')
+        config = None
+        for dp_config in self.config['data_providers']:
+            if dp_config['enabled']:
+                if self.data_provider_id is None:
+                    # Take first.
+                    config = dp_config
+                else:
+                    # Compare ID.
+                    if self.data_provider_id == dp_config['id']:
+                        config = dp_config
+                        break
+
+        data = {'data': {}}
+        if config is not None:
+            f = getattr(sys.modules[__name__], f'{config["id"]}_get_quotes')
+            print(f'f = {f}')
+            data = f(
+                api_host=config['api']['host'],
+                api_key=config['api']['key'],
+                convert=self.config['convert'],
+                symbols=symbols,
+            )
+
+            print('----------- data -----------')
+            print(dumps(data, indent=2))
+            print('----------------------------')
 
         convert = self.config['convert']
 
-        symbol_values = {}
-        # for symbol in symbols:
-        #     symbol_values[symbol] = data['data'][symbol][0]['quote'][convert]['price']
+        symbol_values: Quotes = {}
+        for symbol in symbols:
+            if symbol in data['data']:
+                symbol_values[symbol] = data['data'][symbol][0]['quote'][convert]['price']
 
-        # print('----- symbol_values -----')
-        # print(dumps(symbol_values, indent=2))
-        # print('----------------------------')
+        print('----- symbol_values -----')
+        print(dumps(symbol_values, indent=2))
+        print('----------------------------')
 
         symbol_values['XRP'] = 5.0
 
         return symbol_values
 
-    def _print_portfolio(self, portfolio: Portfolio, show_transactions: bool = False):
+    def _print_portfolio(self, portfolio: Portfolio):
 
         terminal = shutil.get_terminal_size((80, 20))
 
@@ -137,20 +162,21 @@ class App():
 
 def main():
     parser = ArgumentParser(prog='bitportfolio', description='BitPortfolio')
-    parser.add_argument('-c', '--config', type=str, nargs=1, required=False, help='Path to Config File', default=[None])
-    parser.add_argument('-d', '--basedir', type=str, nargs=1, required=False, help='Path to directory', default=[None])
+    parser.add_argument('-c', '--config', type=str, nargs='?', required=False, help='Path to Config File', default=[None])
+    parser.add_argument('-d', '--basedir', type=str, nargs='?', required=False, help='Path to directory', default=[None])
+    parser.add_argument('-p', '--dataprovider', type=str, nargs='?', required=False, help='ID', default='cmc')
     parser.add_argument('-t', '--transactions', action=BooleanOptionalAction, help='Show transactions', default=False)
 
     args = parser.parse_args()
     print(args)
 
-    app = App(args.config[0])
+    app = App(args.config, args.transactions, args.dataprovider)
 
     signal.signal(signal.SIGINT, lambda sig, frame: app.shutdown('SIGINT'))
 
-    basedir = Path(args.basedir[0])
+    basedir = Path(args.basedir)
     try:
-        app.run(basedir, args.transactions)
+        app.run(basedir)
     except KeyboardInterrupt:
         app.shutdown('KeyboardInterrupt')
 
