@@ -1,8 +1,10 @@
 
+from json import dumps
 from spot import Spot
 from pair import Pair
 from transaction import Transaction
 from apptypes import Quotes
+from json_helper import ComplexEncoder
 
 class Portfolio():
     parent: 'Portfolio'
@@ -32,6 +34,14 @@ class Portfolio():
         self.subs = []
         self.pairs = {}
         # self.buy_costs = {}
+        self.holdings = {}
+
+    def to_json(self):
+        return {
+            'name': self.name,
+            'pairs': self.pairs,
+            'holdings': self.holdings,
+        }
 
     def add_portfolio(self, portfolio: 'Portfolio'):
         self.subs.append(portfolio)
@@ -75,38 +85,65 @@ class Portfolio():
 
         if ttype == 'buy':
             ppair.add_buy(tpair)
+            #ppair.buys.append(tpair.sell_spot.quantity)
 
         elif ttype == 'sell':
             ppair.add_sell(tpair)
-
-        # if self.config['convert'] == tpair.sell_spot.symbol:
-        #     if tpair.name not in self.buy_costs:
-        #         self.buy_costs[tpair.name] = []
-        #     self.buy_costs[tpair.name].append(tpair.sell_spot.quantity)
-        #     print(f'-> buy_costs: {self.buy_costs}')
 
         if self.parent is not None:
             self.parent.add_pair(tpair, ttype)
 
     def calc(self):
-        # print(f'-> calc({self.name})')
+        print(f'-> calc({self.name})')
+        # print(f'-> self.pairs: {self.pairs}')
 
         self.holdings = {}
         for pair_id, pair in self.pairs.items():
+            print(f'-> pair: {pair}')
+
             if pair.sell_spot.symbol not in self.holdings:
                 self.holdings[pair.sell_spot.symbol] = Spot(pair.sell_spot.symbol)
 
             if pair.buy_spot.symbol not in self.holdings:
                 self.holdings[pair.buy_spot.symbol] = Spot(pair.buy_spot.symbol)
 
-        for sym, spot in self.holdings.items():
+        # print(f'-> self.holdings: {self.holdings}')
+
+        # print(f'------- holdings -------')
+        # print(self.holdings)
+        # print(dumps(self.holdings, indent=2))
+        # print(f'------------------------')
+
+        for sym, holding in self.holdings.items():
+            print(f'-> holding: {sym}, {holding}')
+
             for pair_id, pair in self.pairs.items():
+                print(f'->    pair: {pair_id}, {pair}')
 
                 if sym == pair.sell_spot.symbol:
-                    spot.sub_q(pair.sell_spot.quantity)
+                    print(f'->      sell_spot: {pair.sell_spot}')
+                    holding.sub_spot(pair.sell_spot)
+                    #holding.avg.append(pair.sell_spot)
+
+                    s = 0
+                    x = 0
+                    for n in pair.buys:
+                        s += n
+                        x += 1
+                    a = s / x
+
+                    holding.avg_s = f'{a:.2f} {pair.sell_spot.symbol}'
+                    print(f'->      holding: {holding}')
+
 
                 elif sym == pair.buy_spot.symbol:
-                    spot.add_q(pair.buy_spot.quantity)
+                    print(f'->      buy_spot: {pair.buy_spot}')
+                    holding.add_spot(pair.buy_spot)
+                    # spot.avg.append(pair.buy_spot)
+
+        print(f'------- holdings -------')
+        print(dumps(self.holdings, indent=2, cls=ComplexEncoder))
+        print(f'------------------------')
 
         for sub_portfolio in self.subs:
             sub_portfolio.calc()

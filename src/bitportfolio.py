@@ -15,6 +15,7 @@ from portfolio import Portfolio
 from transaction import Transaction
 from spot import Spot
 from apptypes import Quotes
+from json_helper import ComplexEncoder
 
 class App():
     show_transactions: bool
@@ -66,6 +67,10 @@ class App():
 
         portfolio = self._traverse(self.base_dir)
         portfolio.calc()
+
+        print(f'------- portfolio -------')
+        print(dumps(portfolio, indent=2, cls=ComplexEncoder))
+        print(f'------------------------')
 
         quotes = self._get_quotes()
         portfolio.quotes(quotes)
@@ -176,6 +181,7 @@ class App():
             'holding': [],
             'quote': [],
             'value': [],
+            'avg': [],
         }
         for sym, spot in portfolio.holdings.items():
             if spot.quantity == 0.0:
@@ -188,6 +194,7 @@ class App():
                 holdings['holding'].append(spot.quantity)
                 holdings['quote'].append(spot.quote)
                 holdings['value'].append(spot.value)
+                holdings['avg'].append(spot.avg_s)
 
         print()
         print('-' * self.terminal.columns)
