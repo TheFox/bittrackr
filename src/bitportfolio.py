@@ -75,9 +75,9 @@ class App():
         portfolio = self._traverse(self.base_dir)
         portfolio.calc()
 
-        print('------- portfolio -------')
-        print(dumps(portfolio, indent=2, cls=ComplexEncoder))
-        print('------------------------')
+        # print('------- portfolio -------')
+        # print(dumps(portfolio, indent=2, cls=ComplexEncoder))
+        # print('------------------------')
 
         quotes = self._get_quotes()
         portfolio.quotes(quotes)
@@ -191,6 +191,7 @@ class App():
             'trx': [],
         }
         sorted_holdings = sorted(portfolio.holdings.items(), key=_sort_holdings, reverse=True)
+        total_value = 0.0
         for sym, spot in sorted_holdings:
             if spot.quantity == 0.0:
                 continue
@@ -204,6 +205,9 @@ class App():
                 holdings['value'].append(spot.value)
                 holdings['trx'].append(len(spot.transactions))
 
+            total_value += spot.value
+        profit = total_value - cost_spot.quantity
+
         print()
         print('-' * self.terminal.columns)
         print(f'Portfolio: {portfolio.name} (level={portfolio.level})')
@@ -215,6 +219,8 @@ class App():
             print(f'Buy  symbols: {buy_symbols}')
 
         print(f'Costs: {cost_spot.quantity:.2f} {cost_spot.symbol}')
+        print(f'Value: {total_value:.2f} {cost_spot.symbol}')
+        print(f'Profit: {profit:.2f} {cost_spot.symbol}')
 
         if len(holdings['sym']) > 0:
             df = pd.DataFrame(data=holdings)

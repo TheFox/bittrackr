@@ -13,8 +13,8 @@ class Holding(Spot):
 
     def __init__(self, s: str, q: float = 0.0):
         super().__init__(s, q)
-        self.quote = None
-        self.value = None
+        self.quote = 0.0
+        self.value = 0.0
         self.transactions = []
 
     def to_json(self):
@@ -81,7 +81,7 @@ class Portfolio():
             self.parent.add_transaction(transaction)
 
     def add_pair(self, tpair: Pair, ttype: str) -> Pair:
-        print(f'-> add_pair({self.name},{tpair},{ttype})')
+        # print(f'-> add_pair({self.name},{tpair},{ttype})')
 
         if tpair.name in self.pairs:
             ppair = self.pairs[tpair.name]
@@ -117,13 +117,6 @@ class Portfolio():
                 holding.transactions = pair.transactions
 
                 self.holdings[pair.buy_spot.symbol] = holding
-
-        # print(f'-> self.holdings: {self.holdings}')
-
-        # print(f'------- holdings -------')
-        # print(self.holdings)
-        # print(dumps(self.holdings, indent=2))
-        # print(f'------------------------')
 
         for sym, holding in self.holdings.items():
             # print(f'-> holding: {sym}, {holding}')
