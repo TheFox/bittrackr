@@ -9,13 +9,20 @@ from argparse import ArgumentParser, BooleanOptionalAction
 from json import loads, load, dumps, dump
 from cmc import get_quotes as cmc_get_quotes
 from sty import fg, bg, ef, rs
-from datetime import datetime
 from pathlib import Path
 from portfolio import Portfolio
 from transaction import Transaction
 from spot import Spot
 from apptypes import Quotes
 from json_helper import ComplexEncoder
+from portfolio import Holding
+
+def _sort_holdings(item: tuple[str, Holding]):
+    # print(f'-> sort: {item}')
+    value = item[1].value
+    if value is None:
+        return 0.0
+    return value
 
 class App():
     show_transactions: bool
@@ -181,8 +188,10 @@ class App():
             'quote': [],
             'holding': [],
             'value': [],
+            'trx': [],
         }
-        for sym, spot in portfolio.holdings.items():
+        sorted_holdings = sorted(portfolio.holdings.items(), key=_sort_holdings, reverse=True)
+        for sym, spot in sorted_holdings:
             if spot.quantity == 0.0:
                 continue
 
@@ -193,6 +202,7 @@ class App():
                 holdings['quote'].append(spot.quote)
                 holdings['holding'].append(spot.quantity)
                 holdings['value'].append(spot.value)
+                holdings['trx'].append(len(spot.transactions))
 
         print()
         print('-' * self.terminal.columns)
@@ -208,6 +218,13 @@ class App():
 
         if len(holdings['sym']) > 0:
             df = pd.DataFrame(data=holdings)
+            df['quote'] = df['quote'].apply(lambda x: '{:.6f}'.format(x))
+            df['holding'] = df['holding'].apply(lambda x: '{:.5f}'.format(x))
+            df['value'] = df['value'].apply(lambda x: '{:.2f}'.format(x))
+
+            df.rename(columns={'quote': f'quote({self.config["convert"]})'}, inplace=True)
+            df.rename(columns={'value': f'value({self.config["convert"]})'}, inplace=True)
+
             df_s = df.to_string(index=False)
             print()
             print(df_s)
