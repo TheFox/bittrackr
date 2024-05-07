@@ -114,7 +114,6 @@ class App():
                 for pair in json:
                     for transaction_j in pair['transactions']:
                         transaction_o = Transaction(pair=pair['pair'], d=transaction_j)
-                        print(f'-> transaction: {transaction_o}')
 
                         handle_trx = True
 
@@ -262,8 +261,6 @@ class App():
             print(df_s)
 
         if self.show_transactions:
-            print('-> show transactins')
-
             transactions = {
                 'date': [],
                 'type': [],
@@ -279,7 +276,6 @@ class App():
             sorted_transactions = sorted(portfolio.transactions, key=lambda t: t.date)
             sorted_transactions = cast(list[Transaction], sorted_transactions)
             for transaction in sorted_transactions:
-                print(f'-> transaction: {transaction}')
 
                 transactions['date'].append(transaction.date)
                 transactions['type'].append(transaction.ttype)

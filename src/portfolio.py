@@ -143,16 +143,16 @@ class Portfolio():
 
     def quotes(self, quotes: Quotes, convert: str):
         for transaction in self.transactions:
-            print(f'-> calc trx: {transaction}')
+            # print(f'-> calc trx: {transaction}')
 
             pair = transaction.pair
 
             if pair.sell_spot.symbol == convert:
-                print(f'-> sell spot')
+                # print(f'-> sell spot')
                 pair.buy_spot.value = quotes[pair.buy_spot.symbol] * pair.buy_spot.quantity
                 pair.buy_spot.profit = pair.buy_spot.value - pair.sell_spot.quantity
             elif pair.buy_spot.symbol == convert:
-                print(f'-> buy spot')
+                # print(f'-> buy spot')
                 raise NotImplementedError()
                 pair.sell_spot.value = quotes[pair.sell_spot.symbol] * pair.sell_spot.quantity
                 pair.sell_spot.profit = 42
@@ -165,14 +165,10 @@ class Portfolio():
 
         self.fee_value = 0.0
         for fee_id, fee in self.fees.items():
-            # print(f'-> calc fee: {fee}')
-
             if fee.symbol == convert:
                 self.fee_value += fee.quantity
             elif fee.symbol in quotes:
                 self.fee_value += fee.quantity * quotes[fee.symbol]
-
-        # print(f'-> self.fee_value={self.fee_value}')
 
         for sub_portfolio in self.subs:
             sub_portfolio.quotes(quotes, convert)

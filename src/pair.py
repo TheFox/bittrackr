@@ -32,14 +32,12 @@ class Pair():
             self.buy_spot = Spot(s=pair.buy)
 
     def add_buy(self, pair: 'Pair'):
-        # print(f'-> add_buy -> {pair}')
         self._init_pair(pair)
 
         self.sell_spot.add_spot(pair.sell_spot)
         self.buy_spot.add_spot(pair.buy_spot)
 
     def add_sell(self, pair: 'Pair'):
-        # print(f'-> add_sell -> {pair}')
         self._init_pair(pair)
 
         self.sell_spot.sub_spot(pair.sell_spot)
