@@ -1,10 +1,8 @@
 
-from json import dumps
 from spot import Spot
 from pair import Pair
 from transaction import Transaction
 from apptypes import Quotes
-from json_helper import ComplexEncoder
 
 class Holding(Spot):
     quote: float
@@ -40,7 +38,6 @@ class Portfolio():
     transactions_c: int
     subs: list['Portfolio']
     pairs: dict[str, Pair]
-    # buy_costs: dict[str, ]
     holdings: dict[str, Holding]
 
     def __init__(self, name: str, parent: None = None):
@@ -56,7 +53,6 @@ class Portfolio():
         self.transactions_c = 0
         self.subs = []
         self.pairs = {}
-        # self.buy_costs = {}
         self.holdings = {}
 
     def to_json(self):
@@ -100,11 +96,8 @@ class Portfolio():
         return ppair
 
     def calc(self):
-        # print(f'-> calc({self.name})')
-
         self.holdings = {}
         for pair_id, pair in self.pairs.items():
-            # print(f'-> pair: {pair}')
 
             if pair.sell_spot.symbol not in self.holdings:
                 holding = Holding(pair.sell_spot.symbol)
@@ -119,22 +112,11 @@ class Portfolio():
                 self.holdings[pair.buy_spot.symbol] = holding
 
         for sym, holding in self.holdings.items():
-            # print(f'-> holding: {sym}, {holding}')
-
             for pair_id, pair in self.pairs.items():
-                # print(f'->    pair: {pair_id}, {pair}')
-
                 if sym == pair.sell_spot.symbol:
-                    # print(f'->      sell_spot: {pair.sell_spot}')
                     holding.sub_spot(pair.sell_spot)
-
                 elif sym == pair.buy_spot.symbol:
-                    # print(f'->      buy_spot: {pair.buy_spot}')
                     holding.add_spot(pair.buy_spot)
-
-        # print('------- holdings -------')
-        # print(dumps(self.holdings, indent=2, cls=ComplexEncoder))
-        # print('------------------------')
 
         for sub_portfolio in self.subs:
             sub_portfolio.calc()
