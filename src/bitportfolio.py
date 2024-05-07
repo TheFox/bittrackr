@@ -45,7 +45,6 @@ class App():
         if base_dir is None:
             self.base_dir = self.change_dir / 'portfolios'
         else:
-            print(f'-> base_dir: {base_dir}')
             self.base_dir = Path(base_dir)
 
         if config_path is None:
@@ -58,10 +57,10 @@ class App():
         else:
             self.quotes_file = Path(quotes_file)
 
-        print(f'-> change_dir: {self.change_dir}')
-        print(f'-> base_dir: {self.base_dir}')
-        print(f'-> config_path: {self.config_path}')
-        print(f'-> quotes_file: {self.quotes_file}')
+        # print(f'-> change_dir: {self.change_dir}')
+        # print(f'-> base_dir: {self.base_dir}')
+        # print(f'-> config_path: {self.config_path}')
+        # print(f'-> quotes_file: {self.quotes_file}')
 
         if self.config_path.exists():
             with open(self.config_path, 'r') as f:
@@ -80,7 +79,7 @@ class App():
         # print('------------------------')
 
         quotes = self._get_quotes()
-        portfolio.quotes(quotes)
+        portfolio.quotes(quotes, self.config['convert'])
 
         self._print_portfolio(portfolio)
 
@@ -197,7 +196,8 @@ class App():
                 continue
 
             if spot.symbol == self.config['convert']:
-                cost_spot.quantity = spot.quantity
+                # cost_spot.quantity = spot.quantity
+                cost_spot.quantity = spot.quantity * -1
             else:
                 holdings['sym'].append(spot.symbol)
                 holdings['quote'].append(spot.quote)
@@ -218,9 +218,20 @@ class App():
         if buy_symbols != '':
             print(f'Buy  symbols: {buy_symbols}')
 
-        print(f'Costs: {cost_spot.quantity:.2f} {cost_spot.symbol}')
-        print(f'Value: {total_value:.2f} {cost_spot.symbol}')
-        print(f'Profit: {profit:.2f} {cost_spot.symbol}')
+        if cost_spot.quantity >= 0:
+            costs_color = fg.red
+        else:
+            costs_color = fg.black
+
+        if profit >= 0:
+            profit_color = fg.black
+        else:
+            profit_color = fg.red
+
+        print(f'Fees:   {portfolio.fee_value:>8.2f} {self.config["convert"]}')
+        print(f'Costs:  {costs_color}{cost_spot.quantity:>8.2f} {cost_spot.symbol}{rs.all}')
+        print(f'Value:  {total_value:>8.2f} {self.config["convert"]}')
+        print(f'Profit: {profit_color}{profit:>8.2f} {self.config["convert"]}{rs.all}')
 
         if len(holdings['sym']) > 0:
             df = pd.DataFrame(data=holdings)
