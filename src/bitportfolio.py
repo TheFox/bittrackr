@@ -3,6 +3,7 @@
 import sys
 import signal
 import shutil
+from typing import cast
 import pandas as pd
 
 from argparse import ArgumentParser, BooleanOptionalAction
@@ -30,7 +31,7 @@ class App():
     config: dict
     running: bool
 
-    def __init__(self, base_dir: str|None = None, config_path: str|None = None, show_transactions: bool = False, data_provider_id: str = 'cmc', quotes_file: str|None = None, change_dir: str|None = None, max_depth: int|None = None, filter_symbol: str|None = None):
+    def __init__(self, base_dir: str|None = None, config_path: str|None = None, show_transactions: bool = False, data_provider_id: str = 'cmc', quotes_file: str|None = None, change_dir: str|None = None, max_depth: int|None = None, filter_symbol: str|None = None, filter_ttype: bool|None = None):
         self.terminal = shutil.get_terminal_size((80, 20))
 
         self.running = False
@@ -68,6 +69,7 @@ class App():
 
         self.max_depth = max_depth
         self.filter_symbol = filter_symbol
+        self.filter_ttype = filter_ttype
 
     def run(self):
         self.running = True
@@ -114,12 +116,15 @@ class App():
                         transaction_o = Transaction(pair=pair['pair'], d=transaction_j)
                         print(f'-> transaction: {transaction_o}')
 
-                        handle_trx = False
+                        handle_trx = True
+
                         if self.filter_symbol is not None:
-                            if transaction_o.sell_symbol == self.filter_symbol or transaction_o.buy_symbol == self.filter_symbol:
-                                handle_trx = True
-                        else:
-                            handle_trx = True
+                            if transaction_o.sell_symbol != self.filter_symbol and transaction_o.buy_symbol != self.filter_symbol:
+                                handle_trx = False
+
+                        if self.filter_ttype is not None:
+                            if transaction_o.ttype != self.filter_ttype:
+                                handle_trx = False
 
                         if handle_trx:
                             portfolio.add_transaction(transaction_o)
@@ -256,6 +261,48 @@ class App():
             print()
             print(df_s)
 
+        if self.show_transactions:
+            print('-> show transactins')
+
+            transactions = {
+                'date': [],
+                'type': [],
+                'pair': [],
+                'quant': [],
+                'price': [],
+                'quote': [],
+                'value': [],
+                'profit': [],
+                'sell': [],
+                'buy': [],
+            }
+            sorted_transactions = sorted(portfolio.transactions, key=lambda t: t.date)
+            sorted_transactions = cast(list[Transaction], sorted_transactions)
+            for transaction in sorted_transactions:
+                print(f'-> transaction: {transaction}')
+
+                transactions['date'].append(transaction.date)
+                transactions['type'].append(transaction.ttype)
+                transactions['pair'].append(transaction.pair.name)
+                transactions['quant'].append(transaction.pair.buy_spot.quantity)
+                transactions['price'].append(transaction.price)
+                transactions['quote'].append(3)
+                transactions['value'].append(transaction.pair.buy_spot.value)
+                transactions['profit'].append(transaction.pair.buy_spot.profit)
+
+                if transaction.ttype == 'buy':
+                    transactions['sell'].append(transaction.pair.sell_spot.to_str())
+                    transactions['buy'].append(transaction.pair.buy_spot.to_str())
+                elif transaction.ttype == 'sell':
+                    transactions['buy'].append(transaction.pair.sell_spot.to_str())
+                    transactions['sell'].append(transaction.pair.buy_spot.to_str())
+
+            if len(transactions['pair']) > 0:
+                df = pd.DataFrame(data=transactions)
+                df_s = df.to_string(index=False)
+                print()
+                print(df_s)
+
         subs = sorted(portfolio.subs, key=lambda p: p.name)
         for sub_portfolio in subs:
             self._print_portfolio(sub_portfolio)
@@ -276,9 +323,17 @@ def main():
     parser.add_argument('-C', '--changedir', type=str, nargs='?', required=False, help='Change directory and look for files')
     parser.add_argument('-l', '--max-depth', type=int, nargs='?', required=False, help='Max directory depth')
     parser.add_argument('-s', '--symbol', type=str, nargs='?', required=False, help='Handle only Transactions with given symbol')
+    parser.add_argument('--buy', action=BooleanOptionalAction, help='Show only buy Transactions')
+    parser.add_argument('--sell', action=BooleanOptionalAction, help='Show only sell Transactions')
 
     args = parser.parse_args()
     print(args)
+
+    filter_ttype = None
+    if args.buy:
+        filter_ttype = 'buy'
+    elif args.sell:
+        filter_ttype = 'sell'
 
     app = App(
         base_dir=args.basedir,
@@ -289,6 +344,7 @@ def main():
         change_dir=args.changedir,
         max_depth=args.max_depth,
         filter_symbol=args.symbol,
+        filter_ttype=filter_ttype,
     )
 
     signal.signal(signal.SIGINT, lambda sig, frame: app.shutdown('SIGINT'))

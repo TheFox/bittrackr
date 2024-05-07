@@ -35,6 +35,7 @@ class Portfolio():
     sell_symbols: set
     buy_symbols: set
     fees: dict[str, Spot]
+    transactions: list[Transaction]
     transactions_c: int
     subs: list['Portfolio']
     pairs: dict[str, Pair]
@@ -51,6 +52,7 @@ class Portfolio():
         self.sell_symbols = set()
         self.buy_symbols = set()
         self.fees = {}
+        self.transactions = []
         self.transactions_c = 0
         self.subs = []
         self.pairs = {}
@@ -68,6 +70,8 @@ class Portfolio():
         self.subs.append(portfolio)
 
     def add_transaction(self, transaction: Transaction):
+        self.transactions.append(transaction)
+
         ppair = self.add_pair(transaction.pair, transaction.ttype)
         ppair.add_transaction(transaction)
 
@@ -138,6 +142,21 @@ class Portfolio():
             sub_portfolio.calc()
 
     def quotes(self, quotes: Quotes, convert: str):
+        for transaction in self.transactions:
+            print(f'-> calc trx: {transaction}')
+
+            pair = transaction.pair
+
+            if pair.sell_spot.symbol == convert:
+                print(f'-> sell spot')
+                pair.buy_spot.value = quotes[pair.buy_spot.symbol] * pair.buy_spot.quantity
+                pair.buy_spot.profit = pair.buy_spot.value - pair.sell_spot.quantity
+            elif pair.buy_spot.symbol == convert:
+                print(f'-> buy spot')
+                raise NotImplementedError()
+                pair.sell_spot.value = quotes[pair.sell_spot.symbol] * pair.sell_spot.quantity
+                pair.sell_spot.profit = 42
+
         for sym, spot in self.holdings.items():
             if spot.symbol in quotes:
                 quote = quotes[spot.symbol]

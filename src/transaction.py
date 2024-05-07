@@ -52,7 +52,7 @@ class Transaction():
         self.pair = pair
 
     def __repr__(self):
-        return f'Transaction[{self.pair_s},{self.ttype},{self.price},{self.quantity}]'
+        return f'Transaction[{self.pair_s},{self.ttype},{self.pair}]'
 
     def to_json(self):
         return {
