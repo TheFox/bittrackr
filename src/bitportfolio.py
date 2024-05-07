@@ -30,7 +30,7 @@ class App():
     config: dict
     running: bool
 
-    def __init__(self, base_dir: str|None = None, config_path: str|None = None, show_transactions: bool = False, data_provider_id: str = 'cmc', quotes_file: str|None = None, change_dir: str|None = None, max_depth: int|None = None):
+    def __init__(self, base_dir: str|None = None, config_path: str|None = None, show_transactions: bool = False, data_provider_id: str = 'cmc', quotes_file: str|None = None, change_dir: str|None = None, max_depth: int|None = None, filter_symbol: str|None = None):
         self.terminal = shutil.get_terminal_size((80, 20))
 
         self.running = False
@@ -67,6 +67,7 @@ class App():
                 self.config = loads(f.read())
 
         self.max_depth = max_depth
+        self.filter_symbol = filter_symbol
 
     def run(self):
         self.running = True
@@ -111,8 +112,17 @@ class App():
                 for pair in json:
                     for transaction_j in pair['transactions']:
                         transaction_o = Transaction(pair=pair['pair'], d=transaction_j)
+                        print(f'-> transaction: {transaction_o}')
 
-                        portfolio.add_transaction(transaction_o)
+                        handle_trx = False
+                        if self.filter_symbol is not None:
+                            if transaction_o.sell_symbol == self.filter_symbol or transaction_o.buy_symbol == self.filter_symbol:
+                                handle_trx = True
+                        else:
+                            handle_trx = True
+
+                        if handle_trx:
+                            portfolio.add_transaction(transaction_o)
 
         return portfolio
 
@@ -228,10 +238,10 @@ class App():
         else:
             profit_color = fg.red
 
-        print(f'Fees:   {portfolio.fee_value:>8.2f} {self.config["convert"]}')
-        print(f'Costs:  {costs_color}{cost_spot.quantity:>8.2f} {cost_spot.symbol}{rs.all}')
-        print(f'Value:  {total_value:>8.2f} {self.config["convert"]}')
-        print(f'Profit: {profit_color}{profit:>8.2f} {self.config["convert"]}{rs.all}')
+        print(f'Fees:   {portfolio.fee_value:>10.2f} {self.config["convert"]}')
+        print(f'Costs:  {costs_color}{cost_spot.quantity:>10.2f} {cost_spot.symbol}{rs.all}')
+        print(f'Value:  {total_value:>10.2f} {self.config["convert"]}')
+        print(f'Profit: {profit_color}{profit:>10.2f} {self.config["convert"]}{rs.all}')
 
         if len(holdings['sym']) > 0:
             df = pd.DataFrame(data=holdings)
@@ -265,6 +275,7 @@ def main():
     parser.add_argument('-qf', '--quotes-file', type=str, nargs='?', required=False, help='Save/load quotes from file')
     parser.add_argument('-C', '--changedir', type=str, nargs='?', required=False, help='Change directory and look for files')
     parser.add_argument('-l', '--max-depth', type=int, nargs='?', required=False, help='Max directory depth')
+    parser.add_argument('-s', '--symbol', type=str, nargs='?', required=False, help='Handle only Transactions with given symbol')
 
     args = parser.parse_args()
     print(args)
@@ -277,6 +288,7 @@ def main():
         quotes_file=args.quotes_file,
         change_dir=args.changedir,
         max_depth=args.max_depth,
+        filter_symbol=args.symbol,
     )
 
     signal.signal(signal.SIGINT, lambda sig, frame: app.shutdown('SIGINT'))
