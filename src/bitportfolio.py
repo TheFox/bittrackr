@@ -221,7 +221,6 @@ class App():
 
         profit = total_value - cost_spot.quantity
 
-        print()
         print('-' * self.terminal.columns)
         print(f'Portfolio: {portfolio.name} (level={portfolio.level})')
         print(f'Transactions: {portfolio.transactions_c}')

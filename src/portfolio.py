@@ -125,7 +125,7 @@ class Portfolio():
 
         self.holdings = {}
         for pair_id, pair in self.pairs.items():
-            print(f'-> create holdings from pairs {pair}')
+            # print(f'-> create holdings from pairs {pair}')
 
             trx_count = len(pair.transactions)
 
@@ -140,14 +140,14 @@ class Portfolio():
             #self.holdings[pair.buy_spot.symbol].add_transactions(pair.transactions)
 
         for sym, spot in self.spots.items():
-            print(f'-> create holdings from spots {spot}')
+            # print(f'-> create holdings from spots {spot}')
 
             if spot.symbol not in self.holdings:
                 self.holdings[spot.symbol] = Holding(spot.symbol)
             self.holdings[spot.symbol].add_trx_count(spot.trx_count)
 
         for hsym, holding in self.holdings.items():
-            print(f'-> calc holding: {holding}')
+            # print(f'-> calc holding: {holding}')
 
             for pair_id, pair in self.pairs.items():
                 if hsym == pair.sell_spot.symbol:
@@ -159,12 +159,12 @@ class Portfolio():
 
             for ssym, spot in self.spots.items():
                 if ssym == hsym:
-                    print(f'-> calc spots {spot} (for {holding})')
+                    # print(f'-> calc spots {spot} (for {holding})')
                     holding.add_spot(spot)
 
 
     def quotes(self, quotes: Quotes, convert: str):
-        print(f'-> quotes: {quotes}')
+        # print(f'-> quotes: {quotes}')
 
         for sub_portfolio in self.subs:
             sub_portfolio.quotes(quotes, convert)
@@ -201,13 +201,13 @@ class Portfolio():
 
                 # print(f'-> calc trx spot transaction: {spot}')
 
-        print('------- holdings A -------')
-        print(dumps(self.holdings, indent=2, cls=ComplexEncoder))
-        print('------------------------')
+        # print('------- holdings A -------')
+        # print(dumps(self.holdings, indent=2, cls=ComplexEncoder))
+        # print('------------------------')
 
         # Holdings
         for hsym, holding in self.holdings.items():
-            print(f'-> quotes holding: {holding}')
+            # print(f'-> quotes holding: {holding}')
 
             if holding.symbol not in quotes:
                 #raise ValueError(f'Symbol not found in quotes: {holding.symbol}')
@@ -217,9 +217,9 @@ class Portfolio():
             holding.quote = quote
             holding.value = quote * holding.quantity
 
-        print('------- holdings B -------')
-        print(dumps(self.holdings, indent=2, cls=ComplexEncoder))
-        print('------------------------')
+        # print('------- holdings B -------')
+        # print(dumps(self.holdings, indent=2, cls=ComplexEncoder))
+        # print('------------------------')
 
         # Fees
         for fee_id, fee in self.fees.items():
