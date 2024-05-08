@@ -316,7 +316,7 @@ def main():
     parser.add_argument('-p', '--dataprovider', type=str, nargs='?', required=False, help='ID', default='cmc')
     parser.add_argument('-t', '--transactions', action=BooleanOptionalAction, help='Show transactions', default=False)
     parser.add_argument('-qf', '--quotes-file', type=str, nargs='?', required=False, help='Save/load quotes from file')
-    parser.add_argument('-C', '--changedir', type=str, nargs='?', required=False, help='Change directory and look for files')
+    parser.add_argument('-C', '--chdir', type=str, nargs='?', required=False, help='Change directory and look for files')
     parser.add_argument('-l', '--max-depth', type=int, nargs='?', required=False, help='Max directory depth')
     parser.add_argument('-s', '--symbol', type=str, nargs='?', required=False, help='Handle only Transactions with given symbol')
     parser.add_argument('--buy', action=BooleanOptionalAction, help='Show only buy Transactions')
@@ -337,7 +337,7 @@ def main():
         show_transactions=args.transactions,
         data_provider_id=args.dataprovider,
         quotes_file=args.quotes_file,
-        change_dir=args.changedir,
+        change_dir=args.chdir,
         max_depth=args.max_depth,
         filter_symbol=args.symbol,
         filter_ttype=filter_ttype,

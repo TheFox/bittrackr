@@ -52,6 +52,7 @@ class Portfolio():
         self.sell_symbols = set()
         self.buy_symbols = set()
         self.fees = {}
+        self.fee_value = 0.0
         self.transactions = []
         self.transactions_c = 0
         self.subs = []
@@ -64,6 +65,7 @@ class Portfolio():
             'pairs': self.pairs,
             'holdings': self.holdings,
             'fees': self.fees,
+            'fees': self.fee_value,
         }
 
     def add_portfolio(self, portfolio: 'Portfolio'):
@@ -148,14 +150,17 @@ class Portfolio():
             pair = transaction.pair
 
             if pair.sell_spot.symbol == convert:
-                # print(f'-> sell spot')
+                if pair.buy_spot.symbol not in quotes:
+                    return ValueError(f'Symbol not found in quotes: {pair.buy_spot.symbol}')
+
                 pair.buy_spot.value = quotes[pair.buy_spot.symbol] * pair.buy_spot.quantity
                 pair.buy_spot.profit = pair.buy_spot.value - pair.sell_spot.quantity
             elif pair.buy_spot.symbol == convert:
-                # print(f'-> buy spot')
-                raise NotImplementedError()
+                if pair.sell_spot.symbol not in quotes:
+                    return ValueError(f'Symbol not found in quotes: {pair.sell_spot.symbol}')
+
                 pair.sell_spot.value = quotes[pair.sell_spot.symbol] * pair.sell_spot.quantity
-                pair.sell_spot.profit = 42
+                pair.sell_spot.profit = pair.sell_spot.value - pair.sell_spot.quantity
 
         for sym, spot in self.holdings.items():
             if spot.symbol in quotes:
