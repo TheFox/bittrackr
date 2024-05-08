@@ -230,7 +230,7 @@ class App():
         if buy_symbols != '':
             print(f'Buy  symbols: {buy_symbols}')
 
-        if cost_spot.quantity >= 0:
+        if cost_spot.quantity >= 0.0:
             costs_color = fg.red
         else:
             costs_color = fg.black

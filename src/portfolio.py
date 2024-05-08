@@ -109,8 +109,6 @@ class Portfolio():
         return ppair
 
     def add_fee(self, fee: Spot):
-        print(f'-> add_fee({self.name}, {fee})')
-
         if fee.symbol in self.fees:
             pfee = self.fees[fee.symbol]
         else:
@@ -132,12 +130,10 @@ class Portfolio():
             if pair.sell_spot.symbol not in self.holdings:
                 self.holdings[pair.sell_spot.symbol] = Holding(pair.sell_spot.symbol)
             self.holdings[pair.sell_spot.symbol].add_trx_count(trx_count)
-            #self.holdings[pair.sell_spot.symbol].add_transactions(pair.transactions)
 
             if pair.buy_spot.symbol not in self.holdings:
                 self.holdings[pair.buy_spot.symbol] = Holding(pair.buy_spot.symbol)
             self.holdings[pair.buy_spot.symbol].add_trx_count(trx_count)
-            #self.holdings[pair.buy_spot.symbol].add_transactions(pair.transactions)
 
         for sym, spot in self.spots.items():
             # print(f'-> create holdings from spots {spot}')
@@ -154,12 +150,9 @@ class Portfolio():
                     holding.sub_spot(pair.sell_spot)
                 elif hsym == pair.buy_spot.symbol:
                     holding.add_spot(pair.buy_spot)
-                else:
-                    raise ValueError(f'Symbol is not sell not buy: hsym={hsym}, sell={pair.sell_spot.symbol}, buy={pair.buy_spot.symbol}')
 
             for ssym, spot in self.spots.items():
                 if ssym == hsym:
-                    # print(f'-> calc spots {spot} (for {holding})')
                     holding.add_spot(spot)
 
 
