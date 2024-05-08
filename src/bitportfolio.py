@@ -125,6 +125,8 @@ class App():
                             if transaction_o.ttype != self.filter_ttype:
                                 handle_trx = False
 
+                        # print(f'-> handle_trx: {transaction_o} {handle_trx}')
+
                         if handle_trx:
                             portfolio.add_transaction(transaction_o)
 
@@ -195,31 +197,28 @@ class App():
         sell_symbols = ', '.join(list(portfolio.sell_symbols))
         buy_symbols = ', '.join(list(portfolio.buy_symbols))
 
-        cost_spot = Spot(s=self.config['convert'])
+        cost_spot = Spot(s=self.config['convert']) #  TODO move to portfolio
         holdings = {
             'sym': [],
+            'quant': [],
             'quote': [],
-            'holding': [],
             'value': [],
             'trx': [],
         }
         sorted_holdings = sorted(portfolio.holdings.items(), key=_sort_holdings, reverse=True)
         total_value = 0.0
-        for sym, spot in sorted_holdings:
-            if spot.quantity == 0.0:
-                continue
-
-            if spot.symbol == self.config['convert']:
-                # cost_spot.quantity = spot.quantity
-                cost_spot.quantity = spot.quantity * -1
+        for hsym, holding in sorted_holdings:
+            if holding.symbol == self.config['convert']:
+                cost_spot.quantity = holding.quantity * -1
             else:
-                holdings['sym'].append(spot.symbol)
-                holdings['quote'].append(spot.quote)
-                holdings['holding'].append(spot.quantity)
-                holdings['value'].append(spot.value)
-                holdings['trx'].append(len(spot.transactions))
+                holdings['sym'].append(holding.symbol)
+                holdings['quant'].append(holding.quantity)
+                holdings['quote'].append(holding.quote)
+                holdings['value'].append(holding.value)
+                holdings['trx'].append(holding.trx_count)
 
-            total_value += spot.value
+            total_value += holding.value
+
         profit = total_value - cost_spot.quantity
 
         print()
@@ -249,8 +248,8 @@ class App():
 
         if len(holdings['sym']) > 0:
             df = pd.DataFrame(data=holdings)
+            df['quant'] = df['quant'].apply(lambda x: '{:.5f}'.format(x))
             df['quote'] = df['quote'].apply(lambda x: '{:.6f}'.format(x))
-            df['holding'] = df['holding'].apply(lambda x: '{:.5f}'.format(x))
             df['value'] = df['value'].apply(lambda x: '{:.2f}'.format(x))
 
             df.rename(columns={'quote': f'quote({self.config["convert"]})'}, inplace=True)
@@ -267,7 +266,6 @@ class App():
                 'pair': [],
                 'quant': [],
                 'price': [],
-                'quote': [],
                 'value': [],
                 'profit': [],
                 'sell': [],
@@ -279,22 +277,38 @@ class App():
 
                 transactions['date'].append(transaction.date)
                 transactions['type'].append(transaction.ttype)
-                transactions['pair'].append(transaction.pair.name)
-                transactions['quant'].append(transaction.pair.buy_spot.quantity)
-                transactions['price'].append(transaction.price)
-                transactions['quote'].append(3)
-                transactions['value'].append(transaction.pair.buy_spot.value)
-                transactions['profit'].append(transaction.pair.buy_spot.profit)
+                if transaction.is_pair:
+                    transactions['price'].append(transaction.price)
+                    transactions['pair'].append(transaction.pair.name)
+                    transactions['quant'].append(transaction.pair.buy_spot.quantity)
+                    transactions['value'].append(transaction.pair.buy_spot.value)
+                    transactions['profit'].append(transaction.pair.buy_spot.profit)
 
-                if transaction.ttype == 'buy':
-                    transactions['sell'].append(transaction.pair.sell_spot.to_str())
-                    transactions['buy'].append(transaction.pair.buy_spot.to_str())
-                elif transaction.ttype == 'sell':
-                    transactions['buy'].append(transaction.pair.sell_spot.to_str())
-                    transactions['sell'].append(transaction.pair.buy_spot.to_str())
+                    if transaction.ttype == 'buy':
+                        transactions['sell'].append(transaction.pair.sell_spot.to_str())
+                        transactions['buy'].append(transaction.pair.buy_spot.to_str())
+                    elif transaction.ttype == 'sell':
+                        transactions['sell'].append(transaction.pair.buy_spot.to_str())
+                        transactions['buy'].append(transaction.pair.sell_spot.to_str())
+                    else:
+                        raise ValueError(f'Unknown Transaction type: {transaction.ttype}')
+                else:
+                    transactions['price'].append(0.0)
+                    transactions['pair'].append(transaction.spot.symbol)
+                    transactions['quant'].append(transaction.spot.quantity)
+                    transactions['value'].append(transaction.spot.value)
+                    transactions['profit'].append(transaction.spot.profit)
+                    transactions['sell'].append('---')
+                    transactions['buy'].append('---')
 
             if len(transactions['pair']) > 0:
-                df = pd.DataFrame(data=transactions)
+                try:
+                    df = pd.DataFrame(data=transactions)
+                except ValueError as error:
+                    print(f'----- transactions -----')
+                    print(dumps(transactions, indent=2))
+                    print('----------------------------')
+                    raise error
                 df_s = df.to_string(index=False)
                 print()
                 print(df_s)
@@ -323,7 +337,7 @@ def main():
     parser.add_argument('--sell', action=BooleanOptionalAction, help='Show only sell Transactions')
 
     args = parser.parse_args()
-    print(args)
+    # print(args)
 
     filter_ttype = None
     if args.buy:

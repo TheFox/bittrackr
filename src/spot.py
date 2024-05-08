@@ -2,13 +2,16 @@
 class Spot():
     symbol: str
     quantity: float
+    trx_count: int
 
-    value: float
+    value: float # TODO move to different class
     profit: float
 
     def __init__(self, s: str, q: float = 0.0):
         self.symbol = s
         self.quantity = q
+        self.trx_count = 0
+
         self.value = 0.0
         self.profit = 0.0
 
@@ -19,12 +22,17 @@ class Spot():
         return {
             'symbol': self.symbol,
             'quantity': self.quantity,
+            'trx_count': self.trx_count,
+
             'value': self.value,
             'profit': self.profit,
         }
 
     def to_str(self) -> str:
         return f'{self.quantity:.2f} {self.symbol}'
+
+    def add_trx_count(self, c: int = 1):
+        self.trx_count += c
 
     def add_spot(self, spot: 'Spot'):
         self.quantity += spot.quantity
