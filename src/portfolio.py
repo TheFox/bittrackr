@@ -142,6 +142,9 @@ class Portfolio():
                 self.holdings[spot.symbol] = Holding(spot.symbol)
             self.holdings[spot.symbol].add_trx_count(spot.trx_count)
 
+        # TODO
+        #for fee_id, fee in self.fees.items():
+
         for hsym, holding in self.holdings.items():
             # print(f'-> calc holding: {holding}')
 
