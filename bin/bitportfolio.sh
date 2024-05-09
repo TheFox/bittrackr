@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
 SCRIPT_BASEDIR=$(dirname "$0")
-cd "${SCRIPT_BASEDIR}/.."
-source ./.venv/bin/activate
-
-./src/bitportfolio.py "$@"
+source "${SCRIPT_BASEDIR}/../.venv/bin/activate"
+"${SCRIPT_BASEDIR}/../src/bitportfolio.py" "$@"
