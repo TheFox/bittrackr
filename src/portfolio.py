@@ -166,23 +166,37 @@ class Portfolio():
             sub_portfolio.quotes(quotes, convert)
 
         for transaction in self.transactions:
-            # print(f'-> calc trx: {transaction}')
 
             if transaction.is_pair:
+                print(f'-> calc pair trx: {transaction}')
+
                 pair = transaction.pair
+
+                print(f'->    ck sell_spot: {pair.sell_spot.symbol}=={convert}')
+                print(f'->    ck buy_spot:  {pair.buy_spot.symbol}=={convert}')
 
                 if pair.sell_spot.symbol == convert:
                     if pair.buy_spot.symbol not in quotes:
-                        raise ValueError(f'Symbol not found in quotes: {pair.buy_spot.symbol}')
-
+                        raise ValueError(f'Buy Symbol not found in quotes: {pair.buy_spot.symbol}')
                     pair.buy_spot.value = quotes[pair.buy_spot.symbol] * pair.buy_spot.quantity
-                    pair.buy_spot.profit = pair.buy_spot.value - pair.sell_spot.quantity
+                    pair.profit = pair.buy_spot.value - pair.sell_spot.quantity
                 elif pair.buy_spot.symbol == convert:
                     if pair.sell_spot.symbol not in quotes:
-                        raise ValueError(f'Symbol not found in quotes: {pair.sell_spot.symbol}')
-
+                        raise ValueError(f'Sell Symbol not found in quotes: {pair.sell_spot.symbol}')
                     pair.sell_spot.value = quotes[pair.sell_spot.symbol] * pair.sell_spot.quantity
-                    pair.sell_spot.profit = pair.sell_spot.value - pair.sell_spot.quantity
+                    #pair.profit =
+                    raise NotImplementedError(f'T1: {pair.sell_spot.value - pair.sell_spot.quantity} T2: {pair.sell_spot.value - pair.buy_spot.quantity}')
+                else:
+                    pass
+                    # TODO: To address this issue, you'll need to provide an additional dictionary to specify the exchange rate between the non-EUR currencies in the pair.
+                    # pair.sell_spot.value = quotes[pair.sell_spot.symbol] * pair.sell_spot.quantity
+                    pair.buy_spot.value = quotes[pair.buy_spot.symbol] * pair.buy_spot.quantity
+                    # pair.profit = pair.sell_spot.value - pair.buy_spot.value
+
+                    # print(f'->    sell_spot={pair.sell_spot}')
+                    # print(f'->    buy_spot={pair.buy_spot}')
+                    # print(f'->    pair.profit={pair.profit}')
+
             else:
                 spot = transaction.spot
                 if spot.symbol not in quotes:
@@ -196,6 +210,10 @@ class Portfolio():
                     raise ValueError(f'Unknown Transaction type: {transaction.ttype}')
 
                 # print(f'-> calc trx spot transaction: {spot}')
+
+        # print('------- transactions -------')
+        # print(dumps(self.transactions, indent=2, cls=ComplexEncoder))
+        # print('------------------------')
 
         # print('------- holdings A -------')
         # print(dumps(self.holdings, indent=2, cls=ComplexEncoder))
@@ -225,3 +243,28 @@ class Portfolio():
                 self.fee_value += fee.quantity * quotes[fee.symbol]
             else:
                 raise ValueError(f'Symbol not found in quotes and not in convert: {spot.symbol}')
+
+    def get_convert_symbols(self, convert: str) -> dict[str, list[str]]:
+        symbols = {}
+        for pair_id, pair in self.pairs.items():
+            print(f'-> pair {pair}')
+
+            if pair.sell_spot.symbol != convert and pair.buy_spot.symbol != convert:
+                if pair.sell_spot.symbol not in symbols:
+                    symbols[pair.sell_spot.symbol] = []
+
+                symbols[pair.sell_spot.symbol].append(pair.buy_spot.symbol)
+
+            elif pair.sell_spot.symbol == convert:
+                if pair.sell_spot.symbol not in symbols:
+                    symbols[pair.sell_spot.symbol] = []
+
+                symbols[pair.sell_spot.symbol].append(pair.buy_spot.symbol)
+
+            elif pair.buy_spot.symbol == convert:
+                if pair.buy_spot.symbol not in symbols:
+                    symbols[pair.buy_spot.symbol] = []
+
+                symbols[pair.buy_spot.symbol].append(pair.sell_spot.symbol)
+
+        return symbols

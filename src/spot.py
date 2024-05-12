@@ -12,8 +12,8 @@ class Spot():
         self.quantity = q
         self.trx_count = 0
 
-        self.value = 0.0
-        self.profit = 0.0
+        self.value = None
+        self.profit = None
 
     def __repr__(self):
         return f'Spot[s={self.symbol},q={self.quantity},v={self.value},p={self.profit}]'

@@ -81,9 +81,20 @@ class App():
         # print(dumps(portfolio, indent=2, cls=ComplexEncoder))
         # print('------------------------')
 
-        quotes = self._get_quotes()
-        portfolio.quotes(quotes, self.config['convert'])
+        psymbols = portfolio.get_convert_symbols(self.config['convert'])
 
+        print(f'----- psymbols -----')
+        print(dumps(psymbols, indent=2))
+        print('----------------------------')
+
+        # quotes2 = self._get_quotes(psymbols, self.config['convert'])
+        # print(f'----- quotes2 -----')
+        # print(dumps(quotes2, indent=2))
+        # print('----------------------------')
+
+
+        quotes = self._get_quotes(None, self.config['convert'])
+        portfolio.quotes(quotes, self.config['convert'])
         self._print_portfolio(portfolio)
 
     def shutdown(self, reason: str):
@@ -132,8 +143,8 @@ class App():
 
         return portfolio
 
-    def _get_quotes(self) -> Quotes:
-        symbols = None
+    def _get_quotes(self, symbols: list[str]|None, convert: str) -> Quotes:
+        #symbols = None
         if 'portfolio' in self.config:
             if 'symbols' in self.config['portfolio']:
                 symbols = self.config['portfolio']['symbols']
@@ -158,15 +169,13 @@ class App():
             data = f(
                 api_host=config['api']['host'],
                 api_key=config['api']['key'],
-                convert=self.config['convert'],
+                convert=convert,
                 symbols=symbols,
             )
 
             # print('----------- data -----------')
             # print(dumps(data, indent=2))
             # print('----------------------------')
-
-        convert = self.config['convert']
 
         load_quotes = False
         symbol_values: Quotes = {}
@@ -251,6 +260,7 @@ class App():
             df['quote'] = df['quote'].apply(lambda x: '{:.6f}'.format(x))
             df['value'] = df['value'].apply(lambda x: '{:.2f}'.format(x))
 
+            df.rename(columns={'price': f'price({self.config["convert"]})'}, inplace=True)
             df.rename(columns={'quote': f'quote({self.config["convert"]})'}, inplace=True)
             df.rename(columns={'value': f'value({self.config["convert"]})'}, inplace=True)
 
@@ -281,7 +291,9 @@ class App():
                     transactions['pair'].append(transaction.pair.name)
                     transactions['quant'].append(transaction.pair.buy_spot.quantity)
                     transactions['value'].append(transaction.pair.buy_spot.value)
-                    transactions['profit'].append(transaction.pair.buy_spot.profit)
+                    transactions['profit'].append(transaction.pair.profit)
+                    #transactions['profit'].append(transaction.pair.buy_spot.profit)
+                    # transactions['profit'].append(f'{transaction.pair.buy_spot.profit}')
 
                     if transaction.ttype == 'buy':
                         transactions['sell'].append(transaction.pair.sell_spot.to_str())
@@ -308,6 +320,12 @@ class App():
                     print(dumps(transactions, indent=2))
                     print('----------------------------')
                     raise error
+
+                df.rename(columns={'price': f'price({self.config["convert"]})'}, inplace=True)
+                df.rename(columns={'quote': f'quote({self.config["convert"]})'}, inplace=True)
+                df.rename(columns={'value': f'value({self.config["convert"]})'}, inplace=True)
+                df.rename(columns={'profit': f'profit({self.config["convert"]})'}, inplace=True)
+
                 df_s = df.to_string(index=False)
                 print()
                 print(df_s)

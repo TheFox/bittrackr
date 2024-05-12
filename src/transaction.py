@@ -5,8 +5,8 @@ from pair import Pair
 class Transaction():
     pair_s: str
     symbol: str
-    sell_symbol: str
-    buy_symbol: str
+    sell_symbol: str|None
+    buy_symbol: str|None
     date: str|None
     ttype: str|None
     price: float|None
@@ -37,6 +37,8 @@ class Transaction():
             self.buy_symbol = buy_symbol
         else:
             self.is_pair = False
+            self.sell_symbol = None
+            self.buy_symbol = None
 
         for key, value in d.items():
             setattr(self, key, value)
@@ -72,7 +74,9 @@ class Transaction():
     def to_json(self):
         return {
             'pair': self.pair_s,
-            'type': self.ttype,
+            'ttype': self.ttype,
             'price': self.price,
             'quantity': self.quantity,
+            'pair': self.pair,
+            'spot': self.spot,
         }

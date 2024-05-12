@@ -7,11 +7,14 @@ class Pair():
     buy_spot: Spot
     transactions: list
 
+    profit: float|None
+
     def __init__(self, name: str = None):
         self.name = name
         self.sell_spot = None
         self.buy_spot = None
         self.transactions = []
+        self.profit = None
 
     def __repr__(self):
         return f'Pair[s={self.sell_spot},b={self.buy_spot},t={len(self.transactions)}]'
