@@ -1,3 +1,3 @@
 
-Quotes = dict[str, float]
-#Quotes = dict[str, dict[str, float]]
+ConvertSymbols = dict[str, list[str]]
+Quotes = dict[str, dict[str, float]]

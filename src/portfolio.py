@@ -1,5 +1,5 @@
 
-from apptypes import Quotes
+from apptypes import ConvertSymbols, Quotes
 from json_helper import ComplexEncoder
 from json import dumps
 from spot import Spot
@@ -244,7 +244,7 @@ class Portfolio():
             else:
                 raise ValueError(f'Symbol not found in quotes and not in convert: {spot.symbol}')
 
-    def get_convert_symbols(self, convert: str) -> dict[str, list[str]]:
+    def get_convert_symbols(self, convert: str) -> ConvertSymbols:
         symbols = {}
         for pair_id, pair in self.pairs.items():
             print(f'-> pair {pair}')

@@ -98,39 +98,45 @@ class App():
             print('\033[2K', end='', flush=True)
 
     def _data_update(self):
-        for dp in self.config['data_providers']:
-            if dp['id'] == 'cmc':
-                response = cmc_get_quotes(
-                    api_host=dp['api']['host'],
-                    api_key=dp['api']['key'],
-                    convert=self.config['convert'],
-                    symbols=self.config['symbols'],
-                )
-                for sym, sdata in response['data'].items():
-                    if len(sdata) == 0:
-                        continue
+        dp_config = self.config['data_provider']
 
-                    fsdata = sdata[0]
-                    fiat_quote = fsdata['quote'][self.config['convert']]
+        if dp_config['id'] == 'cmc':
+            self._data_update_from_cmc()
+        else:
+            raise ValueError(f'Unknown data provider: {dp_config["id"]}')
 
-                    self.data[sym]['dp']['quote_price'] = fiat_quote['price']
-                    self.data[sym]['dp']['last_updated'] = fiat_quote['last_updated']
-                    self.data[sym]['dp']['volume_24h'] = fiat_quote['volume_24h']
-                    self.data[sym]['dp']['volume_change_24h'] = fiat_quote['volume_change_24h']
-                    self.data[sym]['dp']['percent_change_24h'] = fiat_quote['percent_change_24h']
-                    self.data[sym]['dp']['market_cap_dominance'] = fiat_quote['market_cap_dominance']
+    def _data_update_from_cmc(self):
+        dp_config = self.config['data_provider']
 
-                    if self.data[sym]['prev_price'] is not None:
-                        if self.data[sym]['dp']['quote_price'] > self.data[sym]['prev_price']:
-                            self.data[sym]['direction'] = 1
-                        elif self.data[sym]['dp']['quote_price'] < self.data[sym]['prev_price']:
-                            self.data[sym]['direction'] = -1
-                        else:
-                            self.data[sym]['direction'] = 0
+        response = cmc_get_quotes(
+            api_host=dp_config['api']['host'],
+            api_key=dp_config['api']['key'],
+            convert=self.config['convert'],
+            symbols=self.config['symbols'],
+        )
+        for sym, sdata in response['data'].items():
+            if len(sdata) == 0:
+                continue
 
-                    self.data[sym]['prev_price'] = self.data[sym]['dp']['quote_price']
-            else:
-                raise ValueError(f'Unknown data provider: {dp["id"]}')
+            fsdata = sdata[0]
+            fiat_quote = fsdata['quote'][self.config['convert']]
+
+            self.data[sym]['dp']['quote_price'] = fiat_quote['price']
+            self.data[sym]['dp']['last_updated'] = fiat_quote['last_updated']
+            self.data[sym]['dp']['volume_24h'] = fiat_quote['volume_24h']
+            self.data[sym]['dp']['volume_change_24h'] = fiat_quote['volume_change_24h']
+            self.data[sym]['dp']['percent_change_24h'] = fiat_quote['percent_change_24h']
+            self.data[sym]['dp']['market_cap_dominance'] = fiat_quote['market_cap_dominance']
+
+            if self.data[sym]['prev_price'] is not None:
+                if self.data[sym]['dp']['quote_price'] > self.data[sym]['prev_price']:
+                    self.data[sym]['direction'] = 1
+                elif self.data[sym]['dp']['quote_price'] < self.data[sym]['prev_price']:
+                    self.data[sym]['direction'] = -1
+                else:
+                    self.data[sym]['direction'] = 0
+
+            self.data[sym]['prev_price'] = self.data[sym]['dp']['quote_price']
 
     def _screen_update(self):
         # Jump to top left.

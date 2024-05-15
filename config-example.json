@@ -14,14 +14,11 @@
             "XRP"
         ]
     },
-    "data_providers": [
-        {
-            "enabled": true,
-            "id": "cmc",
-            "api": {
-                "host": "sandbox-api.coinmarketcap.com",
-                "key": "b54bcf4d-1bca-4e8e-9a24-22ff2c3d462c"
-            }
+    "data_provider": {
+        "id": "cmc",
+        "api": {
+            "host": "sandbox-api.coinmarketcap.com",
+            "key": "b54bcf4d-1bca-4e8e-9a24-22ff2c3d462c"
         }
-    ]
+    }
 }

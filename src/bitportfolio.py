@@ -14,7 +14,7 @@ from pathlib import Path
 from portfolio import Portfolio
 from transaction import Transaction
 from spot import Spot
-from apptypes import Quotes
+from apptypes import ConvertSymbols, Quotes
 from json_helper import ComplexEncoder
 from portfolio import Holding
 
@@ -31,7 +31,7 @@ class App():
     config: dict
     running: bool
 
-    def __init__(self, base_dir: str|None = None, config_path: str|None = None, show_transactions: bool = False, data_provider_id: str = 'cmc', quotes_file: str|None = None, change_dir: str|None = None, max_depth: int|None = None, filter_symbol: str|None = None, filter_ttype: bool|None = None):
+    def __init__(self, base_dir: str|None = None, config_path: str|None = None, show_transactions: bool = False, data_provider_id: str = 'cmc', quotes_file: str|None = None, change_dir: str|None = None, max_depth: int|None = None, filter_symbol: str|None = None, filter_ttype: bool|None = None, save: bool|None = None):
         self.terminal = shutil.get_terminal_size((80, 20))
 
         self.running = False
@@ -70,6 +70,7 @@ class App():
         self.max_depth = max_depth
         self.filter_symbol = filter_symbol
         self.filter_ttype = filter_ttype
+        self.save = save
 
     def run(self):
         self.running = True
@@ -82,20 +83,33 @@ class App():
         # print('------------------------')
 
         psymbols = portfolio.get_convert_symbols(self.config['convert'])
-
         print(f'----- psymbols -----')
         print(dumps(psymbols, indent=2))
         print('----------------------------')
 
-        # quotes2 = self._get_quotes(psymbols, self.config['convert'])
-        # print(f'----- quotes2 -----')
-        # print(dumps(quotes2, indent=2))
-        # print('----------------------------')
+        if self.quotes_file is not None:
+            if not self.save or self.save is None:
+                print(f'-> load quotes file: {self.quotes_file}')
+                with open(self.quotes_file, 'r') as f:
+                    quotes = load(f)
 
+        quotes = self._get_quotes(psymbols, self.config['convert'])
+        print(f'----- quotes -----')
+        print(dumps(quotes, indent=2))
+        print('----------------------------')
 
-        quotes = self._get_quotes(None, self.config['convert'])
-        portfolio.quotes(quotes, self.config['convert'])
-        self._print_portfolio(portfolio)
+        if self.quotes_file is not None:
+            if self.save:
+                print(f'-> save quotes file: {self.quotes_file}')
+                with open(self.quotes_file, 'w') as f:
+                    dump(quotes, f, indent=2)
+
+        print('------- quotes -------')
+        print(dumps(quotes, indent=2, cls=ComplexEncoder))
+        print('------------------------')
+
+        #portfolio.quotes(quotes, self.config['convert'])
+        #self._print_portfolio(portfolio)
 
     def shutdown(self, reason: str):
         print()
@@ -143,62 +157,44 @@ class App():
 
         return portfolio
 
-    def _get_quotes(self, symbols: list[str]|None, convert: str) -> Quotes:
-        #symbols = None
-        if 'portfolio' in self.config:
-            if 'symbols' in self.config['portfolio']:
-                symbols = self.config['portfolio']['symbols']
-        if symbols is None:
-            symbols = self.config['symbols']
+    def _get_quotes(self, symbols: ConvertSymbols, convert: str) -> Quotes:
+        dp_config = self.config['data_provider']
+        if dp_config['id'] == 'cmc':
+            data_fetch_func = cmc_get_quotes
+        else:
+            raise ValueError(f'Unknown data provider: {dp_config["id"]}')
 
-        config = None
-        for dp_config in self.config['data_providers']:
-            if dp_config['enabled']:
-                if self.data_provider_id is None:
-                    # Take first.
-                    config = dp_config
-                else:
-                    # Compare ID.
-                    if self.data_provider_id == dp_config['id']:
-                        config = dp_config
-                        break
+        symbol_values: Quotes = {}
 
-        data = None
-        if config is not None:
-            f = getattr(sys.modules[__name__], f'{config["id"]}_get_quotes')
-            data = f(
-                api_host=config['api']['host'],
-                api_key=config['api']['key'],
+        for convert, sym_list in symbols.items():
+            # print(f'-> convert {convert} {sym_list}')
+            data = data_fetch_func(
+                api_host=dp_config['api']['host'],
+                api_key=dp_config['api']['key'],
                 convert=convert,
-                symbols=symbols,
+                symbols=sym_list,
             )
 
             # print('----------- data -----------')
             # print(dumps(data, indent=2))
             # print('----------------------------')
 
-        load_quotes = False
-        symbol_values: Quotes = {}
-        if data is None:
-            if self.quotes_file is not None and self.quotes_file.exists():
-                with open(self.quotes_file, 'r') as f:
-                    symbol_values = load(f)
-                load_quotes = True
-        else:
-            for symbol in symbols:
+            for symbol in sym_list:
                 if symbol in data['data']:
                     sdata = data['data'][symbol]
-                    first_q = sdata[0]
-                    if convert in first_q['quote']:
-                        symbol_values[symbol] = first_q['quote'][convert]['price']
+                    # print('----------- sdata -----------')
+                    # print(dumps(sdata, indent=2))
+                    # print('----------------------------')
 
-        # print(f'----- symbol_values ({load_quotes}) -----')
-        # print(dumps(symbol_values, indent=2))
-        # print('----------------------------')
+                    if convert in sdata[0]['quote']:
+                        #symbol_values[symbol] = sdata[0]['quote'][convert]['price']
+                        if convert not in symbol_values:
+                            symbol_values[convert] = {}
+                        symbol_values[convert][symbol] = sdata[0]['quote'][convert]['price']
 
-        if not load_quotes and self.quotes_file is not None:
-            with open(self.quotes_file, 'w') as f:
-                dump(symbol_values, f, indent=2)
+        print(f'----- symbol_values -----')
+        print(dumps(symbol_values, indent=2))
+        print('--------------------------')
 
         return symbol_values
 
@@ -352,6 +348,7 @@ def main():
     parser.add_argument('-s', '--symbol', type=str, nargs='?', required=False, help='Handle only Transactions with given symbol')
     parser.add_argument('--buy', action=BooleanOptionalAction, help='Show only buy Transactions')
     parser.add_argument('--sell', action=BooleanOptionalAction, help='Show only sell Transactions')
+    parser.add_argument('--save', action=BooleanOptionalAction, help='Save Quotes file')
 
     args = parser.parse_args()
     # print(args)
@@ -372,6 +369,7 @@ def main():
         max_depth=args.max_depth,
         filter_symbol=args.symbol,
         filter_ttype=filter_ttype,
+        save=args.save,
     )
 
     signal.signal(signal.SIGINT, lambda sig, frame: app.shutdown('SIGINT'))
