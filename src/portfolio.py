@@ -1,11 +1,12 @@
 
-from apptypes import ConvertSymbols, Quotes
+from apptypes import ConvertSymbols
 from json_helper import ComplexEncoder
 from json import dumps
 from spot import Spot
 from pair import Pair
 from transaction import Transaction
 from holding import Holding
+from quotes import Quotes
 
 class Portfolio():
     parent: 'Portfolio'
@@ -158,6 +159,48 @@ class Portfolio():
                 if ssym == hsym:
                     holding.add_spot(spot)
 
+    def get_convert_symbols(self, convert: str) -> ConvertSymbols:
+        symbols = {}
+
+        def add(sym: str, val: str):
+            if sym not in symbols:
+                symbols[sym] = []
+            if val not in symbols[sym]:
+                symbols[sym].append(val)
+
+        # Pairs
+        for pair_id, pair in self.pairs.items():
+            # print(f'-> pair {pair}')
+
+            if pair.sell_spot.symbol != convert and pair.buy_spot.symbol != convert:
+                add(pair.sell_spot.symbol, pair.buy_spot.symbol)
+
+            elif pair.sell_spot.symbol == convert:
+                add(pair.sell_spot.symbol, pair.buy_spot.symbol)
+
+            elif pair.buy_spot.symbol == convert:
+                add(pair.buy_spot.symbol, pair.sell_spot.symbol)
+
+        # Spots
+        for ssym, spot in self.spots.items():
+            # print(f'-> spot: {ssym} {spot}')
+            add(convert, spot.symbol)
+
+        # Holdings
+        for hsym, holding in self.holdings.items():
+            if holding.symbol == convert:
+                continue
+            # print(f'-> quotes holding: {holding}')
+            add(convert, holding.symbol)
+
+        # Fees
+        for fee_id, fee in self.fees.items():
+            if fee.symbol == convert:
+                continue
+            # print(f'-> fee {fee_id} {fee}')
+            add(convert, fee.symbol)
+
+        return symbols
 
     def quotes(self, quotes: Quotes, convert: str):
         # print(f'-> quotes: {quotes}')
@@ -168,48 +211,30 @@ class Portfolio():
         for transaction in self.transactions:
 
             if transaction.is_pair:
-                print(f'-> calc pair trx: {transaction}')
+                # print(f'-> calc pair trx: {transaction}')
 
                 pair = transaction.pair
+                quote = quotes.get(pair.sell_spot.symbol, pair.buy_spot.symbol)
+                pair.value = quote * pair.buy_spot.quantity
+                pair.profit = pair.value - pair.sell_spot.quantity
 
-                print(f'->    ck sell_spot: {pair.sell_spot.symbol}=={convert}')
-                print(f'->    ck buy_spot:  {pair.buy_spot.symbol}=={convert}')
-
-                if pair.sell_spot.symbol == convert:
-                    if pair.buy_spot.symbol not in quotes:
-                        raise ValueError(f'Buy Symbol not found in quotes: {pair.buy_spot.symbol}')
-                    pair.buy_spot.value = quotes[pair.buy_spot.symbol] * pair.buy_spot.quantity
-                    pair.profit = pair.buy_spot.value - pair.sell_spot.quantity
-                elif pair.buy_spot.symbol == convert:
-                    if pair.sell_spot.symbol not in quotes:
-                        raise ValueError(f'Sell Symbol not found in quotes: {pair.sell_spot.symbol}')
-                    pair.sell_spot.value = quotes[pair.sell_spot.symbol] * pair.sell_spot.quantity
-                    #pair.profit =
-                    raise NotImplementedError(f'T1: {pair.sell_spot.value - pair.sell_spot.quantity} T2: {pair.sell_spot.value - pair.buy_spot.quantity}')
-                else:
-                    pass
-                    # TODO: To address this issue, you'll need to provide an additional dictionary to specify the exchange rate between the non-EUR currencies in the pair.
-                    # pair.sell_spot.value = quotes[pair.sell_spot.symbol] * pair.sell_spot.quantity
-                    pair.buy_spot.value = quotes[pair.buy_spot.symbol] * pair.buy_spot.quantity
-                    # pair.profit = pair.sell_spot.value - pair.buy_spot.value
-
-                    # print(f'->    sell_spot={pair.sell_spot}')
-                    # print(f'->    buy_spot={pair.buy_spot}')
-                    # print(f'->    pair.profit={pair.profit}')
-
+                # print(f'->    ck sell_spot: {pair.sell_spot.symbol}=={convert}')
+                # print(f'->    ck buy_spot:  {pair.buy_spot.symbol}=={convert}')
+                # print(f'->    ck quote:  {quote}')
+                # print(f'->    ck value:  {pair.value}')
+                # print(f'->    ck profit:  {pair.profit}')
             else:
                 spot = transaction.spot
-                if spot.symbol not in quotes:
-                    raise ValueError(f'Symbol not found in quotes: {spot.symbol}')
-                spot.value = quotes[spot.symbol] * spot.quantity
+                quote = quotes.get(convert, spot.symbol)
+                spot.value = quote * spot.quantity
+                spot.profit = spot.value
+
                 if transaction.ttype == 'in':
-                    spot.profit = spot.value
+                    pass
                 elif transaction.ttype == 'out':
-                    spot.profit = spot.value * -1
+                    spot.profit *= -1
                 else:
                     raise ValueError(f'Unknown Transaction type: {transaction.ttype}')
-
-                # print(f'-> calc trx spot transaction: {spot}')
 
         # print('------- transactions -------')
         # print(dumps(self.transactions, indent=2, cls=ComplexEncoder))
@@ -221,13 +246,11 @@ class Portfolio():
 
         # Holdings
         for hsym, holding in self.holdings.items():
-            # print(f'-> quotes holding: {holding}')
-
-            if holding.symbol not in quotes:
-                #raise ValueError(f'Symbol not found in quotes: {holding.symbol}')
+            if holding.symbol == convert:
                 continue
+            # print(f'-> quotes holding: {holding}')
+            quote = quotes.get(convert, holding.symbol)
 
-            quote = quotes[holding.symbol]
             holding.quote = quote
             holding.value = quote * holding.quantity
 
@@ -237,34 +260,11 @@ class Portfolio():
 
         # Fees
         for fee_id, fee in self.fees.items():
+
             if fee.symbol == convert:
+                # print(f'-> fee A {fee}')
                 self.fee_value += fee.quantity
-            elif fee.symbol in quotes:
-                self.fee_value += fee.quantity * quotes[fee.symbol]
             else:
-                raise ValueError(f'Symbol not found in quotes and not in convert: {spot.symbol}')
-
-    def get_convert_symbols(self, convert: str) -> ConvertSymbols:
-        symbols = {}
-        for pair_id, pair in self.pairs.items():
-            print(f'-> pair {pair}')
-
-            if pair.sell_spot.symbol != convert and pair.buy_spot.symbol != convert:
-                if pair.sell_spot.symbol not in symbols:
-                    symbols[pair.sell_spot.symbol] = []
-
-                symbols[pair.sell_spot.symbol].append(pair.buy_spot.symbol)
-
-            elif pair.sell_spot.symbol == convert:
-                if pair.sell_spot.symbol not in symbols:
-                    symbols[pair.sell_spot.symbol] = []
-
-                symbols[pair.sell_spot.symbol].append(pair.buy_spot.symbol)
-
-            elif pair.buy_spot.symbol == convert:
-                if pair.buy_spot.symbol not in symbols:
-                    symbols[pair.buy_spot.symbol] = []
-
-                symbols[pair.buy_spot.symbol].append(pair.sell_spot.symbol)
-
-        return symbols
+                quote = quotes.get(convert, fee.symbol)
+                self.fee_value += quote * fee.quantity
+                # print(f'-> fee B {fee} quote={quote}')

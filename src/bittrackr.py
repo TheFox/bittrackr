@@ -101,13 +101,11 @@ class App():
         dp_config = self.config['data_provider']
 
         if dp_config['id'] == 'cmc':
-            self._data_update_from_cmc()
+            self._data_update_from_cmc(dp_config)
         else:
             raise ValueError(f'Unknown data provider: {dp_config["id"]}')
 
-    def _data_update_from_cmc(self):
-        dp_config = self.config['data_provider']
-
+    def _data_update_from_cmc(self, dp_config: dict):
         response = cmc_get_quotes(
             api_host=dp_config['api']['host'],
             api_key=dp_config['api']['key'],

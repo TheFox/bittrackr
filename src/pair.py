@@ -7,6 +7,7 @@ class Pair():
     buy_spot: Spot
     transactions: list
 
+    value: float|None
     profit: float|None
 
     def __init__(self, name: str = None):
@@ -14,6 +15,8 @@ class Pair():
         self.sell_spot = None
         self.buy_spot = None
         self.transactions = []
+
+        self.value = None
         self.profit = None
 
     def __repr__(self):

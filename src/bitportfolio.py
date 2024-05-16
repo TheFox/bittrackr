@@ -14,12 +14,12 @@ from pathlib import Path
 from portfolio import Portfolio
 from transaction import Transaction
 from spot import Spot
-from apptypes import ConvertSymbols, Quotes
+from apptypes import ConvertSymbols
 from json_helper import ComplexEncoder
 from portfolio import Holding
+from quotes import Quotes
 
 def _sort_holdings(item: tuple[str, Holding]):
-    # print(f'-> sort: {item}')
     value = item[1].value
     if value is None:
         return 0.0
@@ -83,33 +83,36 @@ class App():
         # print('------------------------')
 
         psymbols = portfolio.get_convert_symbols(self.config['convert'])
-        print(f'----- psymbols -----')
-        print(dumps(psymbols, indent=2))
-        print('----------------------------')
+        # print(f'----- psymbols -----')
+        # print(dumps(psymbols, indent=2))
+        # print('----------------------------')
 
-        if self.quotes_file is not None:
-            if not self.save or self.save is None:
-                print(f'-> load quotes file: {self.quotes_file}')
-                with open(self.quotes_file, 'r') as f:
-                    quotes = load(f)
+        # load_quotes = False
+        # if self.quotes_file is not None:
+        #     if not self.save or self.save is None:
+        #         print(f'-> load quotes file: {self.quotes_file}')
+        #         with open(self.quotes_file, 'r') as f:
+        #             quotes_j = load(f)
+        #             quotes = Quotes(quotes_j)
+        #             load_quotes = True
 
         quotes = self._get_quotes(psymbols, self.config['convert'])
-        print(f'----- quotes -----')
-        print(dumps(quotes, indent=2))
-        print('----------------------------')
+        # print(f'----- quotes -----')
+        # print(dumps(quotes, indent=2, cls=ComplexEncoder))
+        # print('----------------------------')
 
         if self.quotes_file is not None:
             if self.save:
                 print(f'-> save quotes file: {self.quotes_file}')
                 with open(self.quotes_file, 'w') as f:
-                    dump(quotes, f, indent=2)
+                    dump(quotes.to_json(), f, indent=2)
 
-        print('------- quotes -------')
-        print(dumps(quotes, indent=2, cls=ComplexEncoder))
-        print('------------------------')
+        # print('------- quotes -------')
+        # print(dumps(quotes, indent=2, cls=ComplexEncoder))
+        # print('------------------------')
 
-        #portfolio.quotes(quotes, self.config['convert'])
-        #self._print_portfolio(portfolio)
+        portfolio.quotes(quotes, self.config['convert'])
+        self._print_portfolio(portfolio)
 
     def shutdown(self, reason: str):
         print()
@@ -164,7 +167,7 @@ class App():
         else:
             raise ValueError(f'Unknown data provider: {dp_config["id"]}')
 
-        symbol_values: Quotes = {}
+        quotes = Quotes()
 
         for convert, sym_list in symbols.items():
             # print(f'-> convert {convert} {sym_list}')
@@ -182,21 +185,15 @@ class App():
             for symbol in sym_list:
                 if symbol in data['data']:
                     sdata = data['data'][symbol]
-                    # print('----------- sdata -----------')
-                    # print(dumps(sdata, indent=2))
-                    # print('----------------------------')
 
                     if convert in sdata[0]['quote']:
-                        #symbol_values[symbol] = sdata[0]['quote'][convert]['price']
-                        if convert not in symbol_values:
-                            symbol_values[convert] = {}
-                        symbol_values[convert][symbol] = sdata[0]['quote'][convert]['price']
+                        quotes.add(convert, symbol, sdata[0]['quote'][convert]['price'])
 
-        print(f'----- symbol_values -----')
-        print(dumps(symbol_values, indent=2))
-        print('--------------------------')
+        # print(f'----- quotes -----')
+        # print(dumps(quotes, indent=2, cls=ComplexEncoder))
+        # print('--------------------------')
 
-        return symbol_values
+        return quotes
 
     def _print_portfolio(self, portfolio: Portfolio):
         sell_symbols = ', '.join(list(portfolio.sell_symbols))
@@ -286,10 +283,8 @@ class App():
                     transactions['price'].append(transaction.price)
                     transactions['pair'].append(transaction.pair.name)
                     transactions['quant'].append(transaction.pair.buy_spot.quantity)
-                    transactions['value'].append(transaction.pair.buy_spot.value)
+                    transactions['value'].append(transaction.pair.value)
                     transactions['profit'].append(transaction.pair.profit)
-                    #transactions['profit'].append(transaction.pair.buy_spot.profit)
-                    # transactions['profit'].append(f'{transaction.pair.buy_spot.profit}')
 
                     if transaction.ttype == 'buy':
                         transactions['sell'].append(transaction.pair.sell_spot.to_str())
