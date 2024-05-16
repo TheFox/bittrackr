@@ -100,7 +100,9 @@ class App():
     def _data_update(self):
         dp_config = self.config['data_provider']
 
-        if dp_config['id'] == 'cmc':
+        if dp_config['id'] == 'default':
+            raise ValueError('Found only default config')
+        elif dp_config['id'] == 'cmc':
             self._data_update_from_cmc(dp_config)
         else:
             raise ValueError(f'Unknown data provider: {dp_config["id"]}')
@@ -187,7 +189,9 @@ class App():
             'update_interval': 60,
             'convert': 'USD',
             'symbols': ['BTC'],
-            'data_providers': [],
+            'data_provider': {
+                'id': 'default',
+            },
         }
 
 def main():
