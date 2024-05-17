@@ -213,11 +213,11 @@ class Portfolio():
 
             if transaction.is_pair:
                 # print(f'-> calc pair trx: {transaction}')
-                print()
+                # print()
 
                 pair = transaction.pair
 
-                print(f'->    ck sell->buy: {pair.sell_spot.symbol}->{pair.buy_spot.symbol}')
+                # print(f'->    ck sell->buy: {pair.sell_spot.symbol}->{pair.buy_spot.symbol}')
 
                 transaction.cprice = quotes.get(convert, pair.buy_spot.symbol)
 
@@ -240,9 +240,9 @@ class Portfolio():
                     #pair.profit = svalue - bvalue
                     pair.profit = bvalue - svalue
 
-                    print(f'->    ck svalue {pair.sell_spot.symbol}: {svalue} ({pair.sell_spot.quantity})')
-                    print(f'->    ck bvalue  {pair.buy_spot.symbol}: {bvalue} ({pair.buy_spot.quantity})')
-                    print(f'->    ck profit: {pair.profit}')
+                    # print(f'->    ck svalue {pair.sell_spot.symbol}: {svalue} ({pair.sell_spot.quantity})')
+                    # print(f'->    ck bvalue  {pair.buy_spot.symbol}: {bvalue} ({pair.buy_spot.quantity})')
+                    # print(f'->    ck profit: {pair.profit}')
 
                     pair.value = bvalue
 
