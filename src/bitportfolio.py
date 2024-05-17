@@ -196,6 +196,9 @@ class App():
         return quotes
 
     def _print_portfolio(self, portfolio: Portfolio):
+        if portfolio.transactions_c == 0:
+            return
+
         sell_symbols = ', '.join(list(portfolio.sell_symbols))
         buy_symbols = ', '.join(list(portfolio.buy_symbols))
 
