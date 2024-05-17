@@ -6,6 +6,7 @@ class Spot():
 
     value: float # TODO move to different class
     profit: float
+    price: float
 
     def __init__(self, s: str, q: float = 0.0):
         self.symbol = s
@@ -14,6 +15,7 @@ class Spot():
 
         self.value = None
         self.profit = None
+        self.price = None
 
     def __repr__(self):
         return f'Spot[s={self.symbol},q={self.quantity},v={self.value},p={self.profit}]'

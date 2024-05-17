@@ -204,44 +204,56 @@ class Portfolio():
 
     def quotes(self, quotes: Quotes, convert: str):
         # print(f'-> quotes: {quotes}')
+        # print(f'-> ck convert: {convert}')
 
         for sub_portfolio in self.subs:
             sub_portfolio.quotes(quotes, convert)
 
         for transaction in self.transactions:
 
-
-
             if transaction.is_pair:
                 # print(f'-> calc pair trx: {transaction}')
+                print()
+
                 pair = transaction.pair
+
+                print(f'->    ck sell->buy: {pair.sell_spot.symbol}->{pair.buy_spot.symbol}')
 
                 transaction.cprice = quotes.get(convert, pair.buy_spot.symbol)
 
-                quote = quotes.get(convert, pair.buy_spot.symbol)
-                #pair.value = quote * pair.buy_spot.quantity
-                #pair.profit = pair.value - pair.sell_spot.quantity
-
                 if pair.sell_spot.symbol == convert:
-                    pair.value = quote * pair.buy_spot.quantity
+                    cquote = quotes.get(convert, pair.buy_spot.symbol)
+                    pair.value = cquote * pair.buy_spot.quantity
                     pair.profit = pair.value - pair.sell_spot.quantity
+
+                    # print(f'->    ck cquote: {cquote}')
+                    # print(f'->    ck value: {pair.value}')
+                    # print(f'->    ck profit: {pair.profit}')
                 elif pair.buy_spot.symbol == convert:
                     raise NotImplementedError()
-                else: # elif pair.sell_spot.symbol != convert and pair.buy_spot.symbol == convert:
-                    pair.value = quote * pair.buy_spot.quantity
+                else:  # elif pair.sell_spot.symbol != convert and pair.buy_spot.symbol == convert:
+                    squote = quotes.get(convert, pair.sell_spot.symbol)
+                    bquote = quotes.get(convert, pair.buy_spot.symbol)
 
-                print()
-                print(f'->    ck convert: {convert}')
-                print(f'->    ck sell->buy: {pair.sell_spot.symbol}->{pair.buy_spot.symbol}')
-                print(f'->    ck quote: {quote}')
-                print(f'->    ck value: {pair.value}')
-                print(f'->    ck profit: {pair.profit}')
+                    svalue = squote * pair.sell_spot.quantity
+                    bvalue = bquote * pair.buy_spot.quantity
+                    #pair.profit = svalue - bvalue
+                    pair.profit = bvalue - svalue
+
+                    print(f'->    ck svalue {pair.sell_spot.symbol}: {svalue} ({pair.sell_spot.quantity})')
+                    print(f'->    ck bvalue  {pair.buy_spot.symbol}: {bvalue} ({pair.buy_spot.quantity})')
+                    print(f'->    ck profit: {pair.profit}')
+
+                    pair.value = bvalue
+
             else:
                 spot = transaction.spot
-                transaction.cprice = 999999
+                #transaction.price = 1
+                #transaction.cprice = quotes.get(convert, pair.buy_spot.symbol)
                 quote = quotes.get(convert, spot.symbol)
                 spot.value = quote * spot.quantity
                 spot.profit = spot.value
+                spot.price = quote
 
                 if transaction.ttype == 'in':
                     pass

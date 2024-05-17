@@ -99,9 +99,9 @@ class App():
         if not load_quotes:
             quotes = self._get_quotes(psymbols, self.config['convert'])
 
-        print(f'----- quotes -----')
-        print(dumps(quotes, indent=2, cls=ComplexEncoder))
-        print('----------------------------')
+        # print(f'----- quotes -----')
+        # print(dumps(quotes, indent=2, cls=ComplexEncoder))
+        # print('----------------------------')
 
         if self.quotes_file is not None:
             if self.save:
@@ -272,8 +272,8 @@ class App():
                 'type': [],
                 'pair': [],
                 'quant': [],
-                'tprice': [],
-                'sprice': [],
+                'tprice': [], # transaction price
+                'sprice': [], # current symbol price
                 'value': [],
                 'profit': [],
                 'sell': [],
@@ -285,12 +285,12 @@ class App():
 
                 transactions['date'].append(transaction.date)
                 transactions['type'].append(transaction.ttype)
-                transactions['sprice'].append(transaction.cprice)
 
                 if transaction.is_pair:
                     transactions['pair'].append(transaction.pair.name)
                     transactions['quant'].append(transaction.pair.buy_spot.quantity)
                     transactions['tprice'].append(transaction.price)
+                    transactions['sprice'].append(transaction.cprice)
                     transactions['value'].append(transaction.pair.value)
                     transactions['profit'].append(transaction.pair.profit)
 
@@ -306,6 +306,7 @@ class App():
                     transactions['pair'].append(transaction.spot.symbol)
                     transactions['quant'].append(transaction.spot.quantity)
                     transactions['tprice'].append('-')
+                    transactions['sprice'].append(transaction.spot.price)
                     transactions['value'].append(transaction.spot.value)
                     transactions['profit'].append(transaction.spot.profit)
                     transactions['sell'].append('---')
@@ -318,11 +319,12 @@ class App():
                     print(f'----- transactions -----')
                     print(dumps(transactions, indent=2))
                     print('----------------------------')
+
                     raise error
 
-                df.rename(columns={'tprice': f'tprice({self.config["convert"]})'}, inplace=True)
-                df.rename(columns={'sprice': f'sprice({self.config["convert"]})'}, inplace=True)
-                df.rename(columns={'quote': f'quote({self.config["convert"]})'}, inplace=True)
+                #df.rename(columns={'tprice': f'tprice({self.config["convert"]})'}, inplace=True)
+                #df.rename(columns={'sprice': f'sprice({self.config["convert"]})'}, inplace=True)
+                #df.rename(columns={'quote': f'quote({self.config["convert"]})'}, inplace=True)
                 df.rename(columns={'value': f'value({self.config["convert"]})'}, inplace=True)
                 df.rename(columns={'profit': f'profit({self.config["convert"]})'}, inplace=True)
 

@@ -56,8 +56,8 @@ class Transaction():
         if self.is_pair:
             pair: Pair = Pair(self.pair_s)
 
-            print(f'self={self}')
-            print(f'self.price={self.price}')
+            # print(f'self={self}')
+            # print(f'self.price={self.price}')
             # print(f'self.quantity={self.quantity}')
             # print(f'-------')
 
