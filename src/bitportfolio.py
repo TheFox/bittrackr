@@ -31,7 +31,7 @@ class App():
     config: dict
     running: bool
 
-    def __init__(self, base_dir: str|None = None, config_path: str|None = None, show_transactions: bool = False, data_provider_id: str = 'cmc', quotes_file: str|None = None, change_dir: str|None = None, max_depth: int|None = None, filter_symbol: str|None = None, filter_ttype: bool|None = None, save: bool|None = None):
+    def __init__(self, base_dir: str|None = None, config_path: str|None = None, show_transactions: bool = False, data_provider_id: str = 'cmc', quotes_file: str|None = None, change_dir: str|None = None, max_depth: int|None = None, filter_symbol: str|None = None, filter_ttype: bool|None = None, load: bool|None = None, save: bool|None = None):
         self.terminal = shutil.get_terminal_size((80, 20))
 
         self.running = False
@@ -70,6 +70,7 @@ class App():
         self.max_depth = max_depth
         self.filter_symbol = filter_symbol
         self.filter_ttype = filter_ttype
+        self.load = load
         self.save = save
 
     def run(self):
@@ -87,19 +88,20 @@ class App():
         # print(dumps(psymbols, indent=2))
         # print('----------------------------')
 
-        # load_quotes = False
-        # if self.quotes_file is not None:
-        #     if not self.save or self.save is None:
-        #         print(f'-> load quotes file: {self.quotes_file}')
-        #         with open(self.quotes_file, 'r') as f:
-        #             quotes_j = load(f)
-        #             quotes = Quotes(quotes_j)
-        #             load_quotes = True
+        load_quotes = False
+        if self.quotes_file is not None:
+            if self.load:
+                print(f'-> load quotes file: {self.quotes_file}')
+                with open(self.quotes_file, 'r') as f:
+                    quotes = Quotes(load(f))
+                    load_quotes = True
 
-        quotes = self._get_quotes(psymbols, self.config['convert'])
-        # print(f'----- quotes -----')
-        # print(dumps(quotes, indent=2, cls=ComplexEncoder))
-        # print('----------------------------')
+        if not load_quotes:
+            quotes = self._get_quotes(psymbols, self.config['convert'])
+
+        print(f'----- quotes -----')
+        print(dumps(quotes, indent=2, cls=ComplexEncoder))
+        print('----------------------------')
 
         if self.quotes_file is not None:
             if self.save:
@@ -238,10 +240,10 @@ class App():
         if cost_spot.quantity >= 0.0:
             costs_color = fg.red
         else:
-            costs_color = fg.black
+            costs_color = rs.all
 
         if profit >= 0:
-            profit_color = fg.black
+            profit_color = rs.all
         else:
             profit_color = fg.red
 
@@ -270,7 +272,8 @@ class App():
                 'type': [],
                 'pair': [],
                 'quant': [],
-                'price': [],
+                'tprice': [],
+                'sprice': [],
                 'value': [],
                 'profit': [],
                 'sell': [],
@@ -282,10 +285,12 @@ class App():
 
                 transactions['date'].append(transaction.date)
                 transactions['type'].append(transaction.ttype)
+                transactions['sprice'].append(transaction.cprice)
+
                 if transaction.is_pair:
-                    transactions['price'].append(transaction.price)
                     transactions['pair'].append(transaction.pair.name)
                     transactions['quant'].append(transaction.pair.buy_spot.quantity)
+                    transactions['tprice'].append(transaction.price)
                     transactions['value'].append(transaction.pair.value)
                     transactions['profit'].append(transaction.pair.profit)
 
@@ -298,9 +303,9 @@ class App():
                     else:
                         raise ValueError(f'Unknown Transaction type: {transaction.ttype}')
                 else:
-                    transactions['price'].append(0.0)
                     transactions['pair'].append(transaction.spot.symbol)
                     transactions['quant'].append(transaction.spot.quantity)
+                    transactions['tprice'].append('-')
                     transactions['value'].append(transaction.spot.value)
                     transactions['profit'].append(transaction.spot.profit)
                     transactions['sell'].append('---')
@@ -315,7 +320,8 @@ class App():
                     print('----------------------------')
                     raise error
 
-                df.rename(columns={'price': f'price({self.config["convert"]})'}, inplace=True)
+                df.rename(columns={'tprice': f'tprice({self.config["convert"]})'}, inplace=True)
+                df.rename(columns={'sprice': f'sprice({self.config["convert"]})'}, inplace=True)
                 df.rename(columns={'quote': f'quote({self.config["convert"]})'}, inplace=True)
                 df.rename(columns={'value': f'value({self.config["convert"]})'}, inplace=True)
                 df.rename(columns={'profit': f'profit({self.config["convert"]})'}, inplace=True)
@@ -346,6 +352,7 @@ def main():
     parser.add_argument('-s', '--symbol', type=str, nargs='?', required=False, help='Handle only Transactions with given symbol')
     parser.add_argument('--buy', action=BooleanOptionalAction, help='Show only buy Transactions')
     parser.add_argument('--sell', action=BooleanOptionalAction, help='Show only sell Transactions')
+    parser.add_argument('--load', action=BooleanOptionalAction, help='Load Quotes file')
     parser.add_argument('--save', action=BooleanOptionalAction, help='Save Quotes file')
 
     args = parser.parse_args()
@@ -367,6 +374,7 @@ def main():
         max_depth=args.max_depth,
         filter_symbol=args.symbol,
         filter_ttype=filter_ttype,
+        load=args.load,
         save=args.save,
     )
 

@@ -10,6 +10,7 @@ class Transaction():
     date: str|None
     ttype: str|None
     price: float|None
+    cprice: float|None
     quantity: float
     fee: Spot|None
     location: str|None
@@ -23,6 +24,7 @@ class Transaction():
         self.date = None
         self.ttype = None
         self.price = None
+        self.cprice = None
         self.quantity = None
         self.fee = None
         self.location = None
@@ -54,8 +56,8 @@ class Transaction():
         if self.is_pair:
             pair: Pair = Pair(self.pair_s)
 
-            # print(f'self={self}')
-            # print(f'self.price={self.price}')
+            print(f'self={self}')
+            print(f'self.price={self.price}')
             # print(f'self.quantity={self.quantity}')
             # print(f'-------')
 

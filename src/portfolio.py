@@ -210,21 +210,35 @@ class Portfolio():
 
         for transaction in self.transactions:
 
+
+
             if transaction.is_pair:
                 # print(f'-> calc pair trx: {transaction}')
-
                 pair = transaction.pair
-                quote = quotes.get(pair.sell_spot.symbol, pair.buy_spot.symbol)
-                pair.value = quote * pair.buy_spot.quantity
-                pair.profit = pair.value - pair.sell_spot.quantity
 
-                # print(f'->    ck sell_spot: {pair.sell_spot.symbol}=={convert}')
-                # print(f'->    ck buy_spot:  {pair.buy_spot.symbol}=={convert}')
-                # print(f'->    ck quote:  {quote}')
-                # print(f'->    ck value:  {pair.value}')
-                # print(f'->    ck profit:  {pair.profit}')
+                transaction.cprice = quotes.get(convert, pair.buy_spot.symbol)
+
+                quote = quotes.get(convert, pair.buy_spot.symbol)
+                #pair.value = quote * pair.buy_spot.quantity
+                #pair.profit = pair.value - pair.sell_spot.quantity
+
+                if pair.sell_spot.symbol == convert:
+                    pair.value = quote * pair.buy_spot.quantity
+                    pair.profit = pair.value - pair.sell_spot.quantity
+                elif pair.buy_spot.symbol == convert:
+                    raise NotImplementedError()
+                else: # elif pair.sell_spot.symbol != convert and pair.buy_spot.symbol == convert:
+                    pair.value = quote * pair.buy_spot.quantity
+
+                print()
+                print(f'->    ck convert: {convert}')
+                print(f'->    ck sell->buy: {pair.sell_spot.symbol}->{pair.buy_spot.symbol}')
+                print(f'->    ck quote: {quote}')
+                print(f'->    ck value: {pair.value}')
+                print(f'->    ck profit: {pair.profit}')
             else:
                 spot = transaction.spot
+                transaction.cprice = 999999
                 quote = quotes.get(convert, spot.symbol)
                 spot.value = quote * spot.quantity
                 spot.profit = spot.value
