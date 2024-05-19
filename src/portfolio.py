@@ -22,7 +22,7 @@ class Portfolio():
     pairs: dict[str, Pair]
     spots: dict[str, Spot]
     holdings: dict[str, Holding]
-    cost: Spot|None
+    costs: Spot|None
 
     def __init__(self, name: str, parent: 'Portfolio' = None):
         self.name = name
@@ -42,7 +42,7 @@ class Portfolio():
         self.pairs = {}
         self.spots = {}
         self.holdings = {}
-        self.cost = None
+        self.costs = None
 
     def to_json(self):
         return {
@@ -144,12 +144,15 @@ class Portfolio():
         # TODO
         #for fee_id, fee in self.fees.items():
 
-        for hsym, holding in self.holdings.items():
-            # print(f'-> calc holding: {holding}')
+        # print(f'----- holdings A -----')
+        # print(dumps(self.holdings, indent=2, cls=ComplexEncoder))
+        # print('-----------------------')
 
-            if convert == holding.symbol:
-                self.cost = Spot(s=holding.symbol)
-                self.cost.quantity = holding.quantity * -1
+        for hsym, holding in self.holdings.items():
+            # print(f'-> holding: {holding}')
+            # if convert == holding.symbol:
+            #     self.costs = Spot(s=holding.symbol)
+                #self.costs.quantity = holding.quantity * -1
 
             for pair_id, pair in self.pairs.items():
                 if hsym == pair.sell_spot.symbol:
@@ -160,6 +163,10 @@ class Portfolio():
             for ssym, spot in self.spots.items():
                 if ssym == hsym:
                     holding.add_spot(spot)
+
+        # print(f'----- holdings B -----')
+        # print(dumps(self.holdings, indent=2, cls=ComplexEncoder))
+        # print('-----------------------')
 
     def get_convert_symbols(self, convert: str) -> ConvertSymbols:
         symbols = {}
@@ -247,7 +254,11 @@ class Portfolio():
 
         # Holdings
         for hsym, holding in self.holdings.items():
+            # print(f'-> holding: {holding}')
+
             if holding.symbol == convert:
+                self.costs = Spot(s=holding.symbol)
+                self.costs.quantity = holding.quantity * -1
                 continue
 
             quote = quotes.get(convert, holding.symbol)
@@ -255,7 +266,7 @@ class Portfolio():
             holding.quote = quote
             holding.value = quote * holding.quantity
 
-        # print('------- holdings B -------')
+        # print('------- holdings C -------')
         # print(dumps(self.holdings, indent=2, cls=ComplexEncoder))
         # print('------------------------')
 

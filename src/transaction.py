@@ -70,6 +70,8 @@ class Transaction():
         else:
             self.spot = Spot(s=self.pair_s, q=self.quantity)
 
+        print(f'self={self}')
+
     def __repr__(self):
         return f'Transaction[{self.pair_s},t={self.ttype},p={self.pair},s={self.spot}]'
 

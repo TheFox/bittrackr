@@ -31,7 +31,18 @@ class App():
     config: dict
     running: bool
 
-    def __init__(self, base_dir: str|None = None, config_path: str|None = None, show_transactions: bool = False, data_provider_id: str = 'cmc', quotes_file: str|None = None, change_dir: str|None = None, max_depth: int|None = None, filter_symbol: str|None = None, filter_ttype: bool|None = None, load: bool|None = None, save: bool|None = None):
+    def __init__(self,
+                 base_dir: str|None = None,
+                 config_path: str|None = None,
+                 show_transactions: bool = False,
+                 data_provider_id: str = 'cmc',
+                 quotes_file: str|None = None,
+                 change_dir: str|None = None,
+                 max_depth: int|None = None,
+                 filter_symbol: str|None = None,
+                 filter_ttype: bool|None = None,
+                 load: bool|None = None,
+                 save: bool|None = None):
         self.terminal = shutil.get_terminal_size((80, 20))
 
         self.running = False
@@ -148,7 +159,8 @@ class App():
                         handle_trx = True
 
                         if self.filter_symbol is not None:
-                            if transaction_o.sell_symbol != self.filter_symbol and transaction_o.buy_symbol != self.filter_symbol:
+                            print(f'-> filter_symbol: c1={transaction_o.sell_symbol != self.filter_symbol} c2={transaction_o.buy_symbol != self.filter_symbol}')
+                            if transaction_o.sell_symbol != self.filter_symbol and transaction_o.buy_symbol != self.filter_symbol and (transaction_o.spot is not None and transaction_o.spot.symbol != self.filter_symbol or transaction_o.spot is None):
                                 handle_trx = False
 
                         if self.filter_ttype is not None:
@@ -223,8 +235,11 @@ class App():
 
             total_value += holding.value
 
-        cost = portfolio.cost.quantity  #+ portfolio.fee_value
-        profit = total_value - cost
+        if portfolio.costs is None:
+            costs_q = 0.0
+        else:
+            costs_q = portfolio.costs.quantity  #+ portfolio.fee_value # TODO
+        profit = total_value - costs_q
 
         print('-' * self.terminal.columns)
         print(f'Portfolio: {portfolio.name} (level={portfolio.level})')
@@ -235,7 +250,7 @@ class App():
         if buy_symbols != '':
             print(f'Buy  symbols: {buy_symbols}')
 
-        if cost >= 0.0:
+        if costs_q >= 0.0:
             costs_color = fg.red
         else:
             costs_color = rs.all
@@ -246,15 +261,16 @@ class App():
             profit_color = fg.red
 
         print(f'Fees:   {portfolio.fee_value:>10.2f} {self.config["convert"]}')
-        print(f'Costs:  {costs_color}{cost:>10.2f} {portfolio.cost.symbol}{rs.all}')
+        if portfolio.costs is not None:
+            print(f'Costs:  {costs_color}{costs_q:>10.2f} {portfolio.costs.symbol}{rs.all}')
         print(f'Value:  {total_value:>10.2f} {self.config["convert"]}')
         print(f'Profit: {profit_color}{profit:>10.2f} {self.config["convert"]}{rs.all}')
 
         if len(holdings['sym']) > 0:
             df = pd.DataFrame(data=holdings)
-            df['quant'] = df['quant'].apply(lambda x: '{:.5f}'.format(x))
-            df['quote'] = df['quote'].apply(lambda x: '{:.6f}'.format(x))
-            df['value'] = df['value'].apply(lambda x: '{:.2f}'.format(x))
+            df['quant'] = df['quant'].map('{:.5f}'.format)
+            df['quote'] = df['quote'].map('{:.2f}'.format)
+            df['value'] = df['value'].map('{:.2f}'.format)
 
             df.rename(columns={'price': f'price({self.config["convert"]})'}, inplace=True)
             df.rename(columns={'quote': f'quote({self.config["convert"]})'}, inplace=True)
@@ -270,8 +286,8 @@ class App():
                 'type': [],
                 'pair': [],
                 'quant': [],
-                'tprice': [], # transaction price
-                'sprice': [], # current symbol price
+                'price': [], # transaction price
+                'quote': [], # current symbol price
                 'value': [],
                 'profit': [],
                 'sell': [],
@@ -287,8 +303,8 @@ class App():
                 if transaction.is_pair:
                     transactions['pair'].append(transaction.pair.name)
                     transactions['quant'].append(transaction.pair.buy_spot.quantity)
-                    transactions['tprice'].append(transaction.price)
-                    transactions['sprice'].append(transaction.cprice)
+                    transactions['price'].append(transaction.price)
+                    transactions['quote'].append(transaction.cprice)
                     transactions['value'].append(transaction.pair.value)
                     transactions['profit'].append(transaction.pair.profit)
 
@@ -303,8 +319,8 @@ class App():
                 else:
                     transactions['pair'].append(transaction.spot.symbol)
                     transactions['quant'].append(transaction.spot.quantity)
-                    transactions['tprice'].append('-')
-                    transactions['sprice'].append(transaction.spot.price)
+                    transactions['price'].append('---')
+                    transactions['quote'].append(transaction.spot.price)
                     transactions['value'].append(transaction.spot.value)
                     transactions['profit'].append(transaction.spot.profit)
                     transactions['sell'].append('---')
@@ -320,8 +336,14 @@ class App():
 
                     raise error
 
+                df['quote'] = df['quote'].map('{:.2f}'.format)
+                df['value'] = df['value'].map('{:.2f}'.format)
+                df['profit'] = df['profit'].map('{:.2f}'.format)
+
+                df.rename(columns={'quote': f'quote({self.config["convert"]})'}, inplace=True)
                 df.rename(columns={'value': f'value({self.config["convert"]})'}, inplace=True)
                 df.rename(columns={'profit': f'profit({self.config["convert"]})'}, inplace=True)
+
 
                 df_s = df.to_string(index=False)
                 print()
