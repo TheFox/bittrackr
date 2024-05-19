@@ -153,7 +153,7 @@ class Portfolio():
             self.holdings[spot.symbol].add_trx_count(spot.trx_count)
             self.holdings[spot.symbol].transactions.extend(spot.transactions)
 
-            print(f'-> spot: {spot.trx_count} {len(spot.transactions)} {self.holdings[spot.symbol].trx_count} {len(self.holdings[spot.symbol].transactions)}')
+            # print(f'-> spot: {spot.trx_count} {len(spot.transactions)} {self.holdings[spot.symbol].trx_count} {len(self.holdings[spot.symbol].transactions)}')
 
         # TODO
         #for fee_id, fee in self.fees.items():
@@ -176,19 +176,13 @@ class Portfolio():
 
                 if holding.symbol == pair.sell_spot.symbol:
                     holding.sub_spot(pair.sell_spot)
-                    #holding.transactions.extend(pair.transactions)
 
                 elif holding.symbol == pair.buy_spot.symbol:
                     holding.add_spot(pair.buy_spot)
-                    #holding.transactions.extend(pair.transactions)
-
-                else:
-                    raise ValueError(f'hs={holding.symbol} ps={pair.sell_spot} pb={pair.buy_spot}')
 
             for ssym, spot in self.spots.items():
                 if holding.symbol == spot.symbol:
                     holding.add_spot(spot)
-                    #holding.transactions.extend(spot.transactions)
 
         # print(f'----- holdings B -----')
         # print(dumps(self.holdings, indent=2, cls=ComplexEncoder))
@@ -290,7 +284,7 @@ class Portfolio():
 
         # Holdings
         for hsym, holding in self.holdings.items():
-            print(f'-> holding: {holding}')
+            # print(f'-> holding: {holding}')
 
             if holding.symbol == convert:
                 self.costs = Spot(s=holding.symbol)
@@ -304,7 +298,7 @@ class Portfolio():
 
             holding.profit = 0.0
             for transaction in holding.transactions:
-                print(f'    -> transaction: {transaction.profit} {transaction}')
+                # print(f'    -> transaction: {transaction.profit} {transaction}')
                 holding.profit += transaction.profit
 
         # print('------- holdings C -------')

@@ -25,6 +25,17 @@ def _sort_holdings(item: tuple[str, Holding]):
         return 0.0
     return value
 
+def _format_profit(val):
+    print(f'-> _format_profit: {val}')
+    if val < 0.0:
+        return f'{fg.red}{val:.5f}{rs.all}'
+    return f'{val:.5f}'
+
+def _color_negative_red(val):
+    print(f'-> _color_negative_red: {val}')
+    color = 'red' if val < 0 else 'black'
+    return 'color: %s' % color
+
 class App():
     show_transactions: bool
     data_provider_id: str|None
@@ -274,10 +285,22 @@ class App():
 
         if len(holdings['sym']) > 0:
             df = pd.DataFrame(data=holdings)
-            df['quant'] = df['quant'].map('{:.5f}'.format)
-            df['quote'] = df['quote'].map('{:.2f}'.format)
-            df['value'] = df['value'].map('{:.2f}'.format)
-            df['profit'] = df['profit'].map('{:.2f}'.format)
+
+            #df.style.apply(_color_negative_red)
+            #df = df.style.map(_color_negative_red)
+            # df.style.format({
+            #     'quote': '{:.2f}',
+            #     'value': '{:.2f}',
+            #     'profit': '{:.2f}',
+            # })
+
+            # df['quant'] = df['quant'].map('{:.5f}'.format)
+            # df['quote'] = df['quote'].map('{:.2f}'.format)
+            # df['value'] = df['value'].map('{:.2f}'.format)
+            # df['profit'] = df['profit'].map('{:.2f}'.format)
+            #df['profit'] = df['profit'].apply(lambda x: '{:.5f}'.format(x))
+            #df['profit'] = df['profit'].apply(_format_profit)
+            #df['profit'] = df['profit'].map(_format_profit)
 
             df.rename(columns={'price': f'price({self.config["convert"]})'}, inplace=True)
             df.rename(columns={'quote': f'quote({self.config["convert"]})'}, inplace=True)
@@ -344,13 +367,24 @@ class App():
 
                     raise error
 
-                df['quote'] = df['quote'].map('{:.2f}'.format)
-                df['value'] = df['value'].map('{:.2f}'.format)
-                df['profit'] = df['profit'].map('{:.2f}'.format)
+                df.style.format({
+                    'quote': '{:.2f}',
+                    'value': '{:.2f}',
+                    'profit': '{:.2f}',
+                })
+
+                # df['quote'] = df['quote'].map('{:.2f}'.format)
+                # df['value'] = df['value'].map('{:.2f}'.format)
+                # df['profit'] = df['profit'].map('{:.2f}'.format)
+                #df['profit'] = df['profit'].apply(_format_profit)
 
                 df.rename(columns={'quote': f'quote({self.config["convert"]})'}, inplace=True)
                 df.rename(columns={'value': f'value({self.config["convert"]})'}, inplace=True)
                 df.rename(columns={'profit': f'profit({self.config["convert"]})'}, inplace=True)
+
+                #df = df.style.format(precision=3, thousands=',', decimal='.')
+                #df.style.format(precision=3, thousands=',', decimal='.')
+                #df.style = df.style.format(precision=3, thousands=',', decimal='.')
 
 
                 df_s = df.to_string(index=False)
@@ -366,7 +400,8 @@ def main():
     pd.set_option('display.max_colwidth', None)
     pd.set_option('display.max_columns', None)
     pd.set_option('display.max_rows', None)
-    #pd.options.display.float_format = '{:,.2f}'.format
+    pd.options.display.float_format = '{:,.2f}'.format
+
 
     parser = ArgumentParser(prog='bitportfolio', description='BitPortfolio')
     parser.add_argument('-c', '--config', type=str, nargs='?', required=False, help='Path to Config File')
