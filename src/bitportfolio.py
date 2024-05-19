@@ -321,10 +321,10 @@ class App():
                 'quote': [], # current symbol price
                 'value': [],
                 'profit': [],
-                'sellq': [],
                 'sells': [],
-                'buyq': [],
+                'sellq': [],
                 'buys': [],
+                'buyq': [],
             }
             sorted_transactions = sorted(portfolio.transactions, key=lambda t: t.date)
             sorted_transactions = cast(list[Transaction], sorted_transactions)
@@ -389,10 +389,10 @@ class App():
                 df.rename(columns={'quote': f'quote({self.config["convert"]})'}, inplace=True)
                 df.rename(columns={'value': f'value({self.config["convert"]})'}, inplace=True)
                 df.rename(columns={'profit': f'profit({self.config["convert"]})'}, inplace=True)
-                df.rename(columns={'sellq': f'sell_quant'}, inplace=True)
-                df.rename(columns={'sells': f'sell_sym'}, inplace=True)
-                df.rename(columns={'buyq': f'buy_quant'}, inplace=True)
-                df.rename(columns={'buys': f'buy_sym'}, inplace=True)
+                df.rename(columns={'sellq': f'squant'}, inplace=True)
+                df.rename(columns={'sells': f'ssym'}, inplace=True)
+                df.rename(columns={'buyq': f'bquant'}, inplace=True)
+                df.rename(columns={'buys': f'bsym'}, inplace=True)
 
                 #df = df.style.format(precision=3, thousands=',', decimal='.')
                 #df.style.format(precision=3, thousands=',', decimal='.')
