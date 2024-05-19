@@ -321,8 +321,10 @@ class App():
                 'quote': [], # current symbol price
                 'value': [],
                 'profit': [],
-                'sell': [],
-                'buy': [],
+                'sellq': [],
+                'sells': [],
+                'buyq': [],
+                'buys': [],
             }
             sorted_transactions = sorted(portfolio.transactions, key=lambda t: t.date)
             sorted_transactions = cast(list[Transaction], sorted_transactions)
@@ -340,11 +342,15 @@ class App():
                     transactions['profit'].append(transaction.pair.profit)
 
                     if transaction.ttype == 'buy':
-                        transactions['sell'].append(transaction.pair.sell_spot.to_str())
-                        transactions['buy'].append(transaction.pair.buy_spot.to_str())
+                        transactions['sellq'].append(transaction.pair.sell_spot.quantity)
+                        transactions['sells'].append(transaction.pair.sell_spot.symbol)
+                        transactions['buyq'].append(transaction.pair.buy_spot.quantity)
+                        transactions['buys'].append(transaction.pair.buy_spot.symbol)
                     elif transaction.ttype == 'sell':
-                        transactions['sell'].append(transaction.pair.buy_spot.to_str())
-                        transactions['buy'].append(transaction.pair.sell_spot.to_str())
+                        transactions['sellq'].append(transaction.pair.buy_spot.quantity)
+                        transactions['sells'].append(transaction.pair.buy_spot.symbol)
+                        transactions['buyq'].append(transaction.pair.sell_spot.quantity)
+                        transactions['buys'].append(transaction.pair.sell_spot.symbol)
                     else:
                         raise ValueError(f'Unknown Transaction type: {transaction.ttype}')
                 else:
@@ -354,8 +360,10 @@ class App():
                     transactions['quote'].append(transaction.spot.price)
                     transactions['value'].append(transaction.spot.value)
                     transactions['profit'].append(transaction.spot.profit)
-                    transactions['sell'].append('---')
-                    transactions['buy'].append('---')
+                    transactions['sellq'].append('---')
+                    transactions['sells'].append('---')
+                    transactions['buyq'].append('---')
+                    transactions['buys'].append('---')
 
             if len(transactions['pair']) > 0:
                 try:
@@ -381,6 +389,10 @@ class App():
                 df.rename(columns={'quote': f'quote({self.config["convert"]})'}, inplace=True)
                 df.rename(columns={'value': f'value({self.config["convert"]})'}, inplace=True)
                 df.rename(columns={'profit': f'profit({self.config["convert"]})'}, inplace=True)
+                df.rename(columns={'sellq': f'sell_quant'}, inplace=True)
+                df.rename(columns={'sells': f'sell_sym'}, inplace=True)
+                df.rename(columns={'buyq': f'buy_quant'}, inplace=True)
+                df.rename(columns={'buys': f'buy_sym'}, inplace=True)
 
                 #df = df.style.format(precision=3, thousands=',', decimal='.')
                 #df.style.format(precision=3, thousands=',', decimal='.')
@@ -401,7 +413,6 @@ def main():
     pd.set_option('display.max_columns', None)
     pd.set_option('display.max_rows', None)
     pd.options.display.float_format = '{:,.2f}'.format
-
 
     parser = ArgumentParser(prog='bitportfolio', description='BitPortfolio')
     parser.add_argument('-c', '--config', type=str, nargs='?', required=False, help='Path to Config File')
