@@ -126,8 +126,6 @@ class Portfolio():
 
         self.holdings = {}
         for pair_id, pair in self.pairs.items():
-            # print(f'-> create holdings from pairs {pair}')
-
             trx_count = len(pair.transactions)
 
             if pair.sell_spot.symbol not in self.holdings:
@@ -139,8 +137,6 @@ class Portfolio():
             self.holdings[pair.buy_spot.symbol].add_trx_count(trx_count)
 
         for sym, spot in self.spots.items():
-            # print(f'-> create holdings from spots {spot}')
-
             if spot.symbol not in self.holdings:
                 self.holdings[spot.symbol] = Holding(spot.symbol)
             self.holdings[spot.symbol].add_trx_count(spot.trx_count)
@@ -209,21 +205,13 @@ class Portfolio():
         return symbols
 
     def quotes(self, quotes: Quotes, convert: str):
-        # print(f'-> quotes: {quotes}')
-        # print(f'-> ck convert: {convert}')
-
         for sub_portfolio in self.subs:
             sub_portfolio.quotes(quotes, convert)
 
         for transaction in self.transactions:
 
             if transaction.is_pair:
-                # print(f'-> calc pair trx: {transaction}')
-                # print()
-
                 pair = transaction.pair
-
-                # print(f'->    ck sell->buy: {pair.sell_spot.symbol}->{pair.buy_spot.symbol}')
 
                 transaction.cprice = quotes.get(convert, pair.buy_spot.symbol)
 
@@ -231,31 +219,20 @@ class Portfolio():
                     cquote = quotes.get(convert, pair.buy_spot.symbol)
                     pair.value = cquote * pair.buy_spot.quantity
                     pair.profit = pair.value - pair.sell_spot.quantity
-
-                    # print(f'->    ck cquote: {cquote}')
-                    # print(f'->    ck value: {pair.value}')
-                    # print(f'->    ck profit: {pair.profit}')
                 elif pair.buy_spot.symbol == convert:
                     raise NotImplementedError()
-                else:  # elif pair.sell_spot.symbol != convert and pair.buy_spot.symbol == convert:
+                else:
                     squote = quotes.get(convert, pair.sell_spot.symbol)
                     bquote = quotes.get(convert, pair.buy_spot.symbol)
 
                     svalue = squote * pair.sell_spot.quantity
                     bvalue = bquote * pair.buy_spot.quantity
-                    #pair.profit = svalue - bvalue
                     pair.profit = bvalue - svalue
-
-                    # print(f'->    ck svalue {pair.sell_spot.symbol}: {svalue} ({pair.sell_spot.quantity})')
-                    # print(f'->    ck bvalue  {pair.buy_spot.symbol}: {bvalue} ({pair.buy_spot.quantity})')
-                    # print(f'->    ck profit: {pair.profit}')
 
                     pair.value = bvalue
 
             else:
                 spot = transaction.spot
-                #transaction.price = 1
-                #transaction.cprice = quotes.get(convert, pair.buy_spot.symbol)
                 quote = quotes.get(convert, spot.symbol)
                 spot.value = quote * spot.quantity
                 spot.profit = spot.value
@@ -268,19 +245,11 @@ class Portfolio():
                 else:
                     raise ValueError(f'Unknown Transaction type: {transaction.ttype}')
 
-        # print('------- transactions -------')
-        # print(dumps(self.transactions, indent=2, cls=ComplexEncoder))
-        # print('------------------------')
-
-        # print('------- holdings A -------')
-        # print(dumps(self.holdings, indent=2, cls=ComplexEncoder))
-        # print('------------------------')
-
         # Holdings
         for hsym, holding in self.holdings.items():
             if holding.symbol == convert:
                 continue
-            # print(f'-> quotes holding: {holding}')
+
             quote = quotes.get(convert, holding.symbol)
 
             holding.quote = quote
@@ -294,9 +263,7 @@ class Portfolio():
         for fee_id, fee in self.fees.items():
 
             if fee.symbol == convert:
-                # print(f'-> fee A {fee}')
                 self.fee_value += fee.quantity
             else:
                 quote = quotes.get(convert, fee.symbol)
                 self.fee_value += quote * fee.quantity
-                # print(f'-> fee B {fee} quote={quote}')

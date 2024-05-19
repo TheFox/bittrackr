@@ -320,9 +320,6 @@ class App():
 
                     raise error
 
-                #df.rename(columns={'tprice': f'tprice({self.config["convert"]})'}, inplace=True)
-                #df.rename(columns={'sprice': f'sprice({self.config["convert"]})'}, inplace=True)
-                #df.rename(columns={'quote': f'quote({self.config["convert"]})'}, inplace=True)
                 df.rename(columns={'value': f'value({self.config["convert"]})'}, inplace=True)
                 df.rename(columns={'profit': f'profit({self.config["convert"]})'}, inplace=True)
 
