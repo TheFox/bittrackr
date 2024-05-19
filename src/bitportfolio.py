@@ -88,7 +88,7 @@ class App():
         self.running = True
 
         portfolio = self._traverse(self.base_dir)
-        portfolio.calc(self.config['convert'])
+        portfolio.calc()
 
         # print('------- portfolio -------')
         # print(dumps(portfolio, indent=2, cls=ComplexEncoder))
@@ -159,7 +159,7 @@ class App():
                         handle_trx = True
 
                         if self.filter_symbol is not None:
-                            print(f'-> filter_symbol: c1={transaction_o.sell_symbol != self.filter_symbol} c2={transaction_o.buy_symbol != self.filter_symbol}')
+                            # print(f'-> filter_symbol: c1={transaction_o.sell_symbol != self.filter_symbol} c2={transaction_o.buy_symbol != self.filter_symbol}')
                             if transaction_o.sell_symbol != self.filter_symbol and transaction_o.buy_symbol != self.filter_symbol and (transaction_o.spot is not None and transaction_o.spot.symbol != self.filter_symbol or transaction_o.spot is None):
                                 handle_trx = False
 
@@ -221,17 +221,23 @@ class App():
             'quant': [],
             'quote': [],
             'value': [],
+            'profit': [],
             'trx': [],
         }
         sorted_holdings = sorted(portfolio.holdings.items(), key=_sort_holdings, reverse=True)
         total_value = 0.0
         for hsym, holding in sorted_holdings:
-            if holding.symbol != self.config['convert']:
-                holdings['sym'].append(holding.symbol)
-                holdings['quant'].append(holding.quantity)
-                holdings['quote'].append(holding.quote)
-                holdings['value'].append(holding.value)
-                holdings['trx'].append(holding.trx_count)
+            if holding.symbol == self.config['convert']:
+                continue
+
+            # print(f'-> holding: {holding}')
+
+            holdings['sym'].append(holding.symbol)
+            holdings['quant'].append(holding.quantity)
+            holdings['quote'].append(holding.quote)
+            holdings['value'].append(holding.value)
+            holdings['profit'].append(holding.profit)
+            holdings['trx'].append(holding.trx_count)
 
             total_value += holding.value
 
@@ -271,10 +277,12 @@ class App():
             df['quant'] = df['quant'].map('{:.5f}'.format)
             df['quote'] = df['quote'].map('{:.2f}'.format)
             df['value'] = df['value'].map('{:.2f}'.format)
+            df['profit'] = df['profit'].map('{:.2f}'.format)
 
             df.rename(columns={'price': f'price({self.config["convert"]})'}, inplace=True)
             df.rename(columns={'quote': f'quote({self.config["convert"]})'}, inplace=True)
             df.rename(columns={'value': f'value({self.config["convert"]})'}, inplace=True)
+            df.rename(columns={'profit': f'profit({self.config["convert"]})'}, inplace=True)
 
             df_s = df.to_string(index=False)
             print()

@@ -2,10 +2,9 @@
 from apptypes import ConvertSymbols
 from json_helper import ComplexEncoder
 from json import dumps
-from spot import Spot
+from spot import Spot, Holding
 from pair import Pair
 from transaction import Transaction
-from holding import Holding
 from quotes import Quotes
 
 class Portfolio():
@@ -82,6 +81,7 @@ class Portfolio():
                 self.spots[transaction.spot.symbol] = spot
 
             spot.add_trx_count()
+            spot.transactions.append(transaction)
 
             if transaction.ttype == 'in':
                 spot.add_spot(transaction.spot)
@@ -120,7 +120,7 @@ class Portfolio():
 
         pfee.add_spot(fee)
 
-    def calc(self, convert: str):
+    def calc(self):
         for sub_portfolio in self.subs:
             sub_portfolio.calc()
 
@@ -130,39 +130,65 @@ class Portfolio():
 
             if pair.sell_spot.symbol not in self.holdings:
                 self.holdings[pair.sell_spot.symbol] = Holding(pair.sell_spot.symbol)
+
+            # print(f'-> pair: {trx_count}')
+
             self.holdings[pair.sell_spot.symbol].add_trx_count(trx_count)
+            self.holdings[pair.sell_spot.symbol].transactions.extend(pair.transactions)
 
             if pair.buy_spot.symbol not in self.holdings:
                 self.holdings[pair.buy_spot.symbol] = Holding(pair.buy_spot.symbol)
+
             self.holdings[pair.buy_spot.symbol].add_trx_count(trx_count)
+            self.holdings[pair.buy_spot.symbol].transactions.extend(pair.transactions)
+
+            # print(f'    -> sell_spot: {self.holdings[pair.sell_spot.symbol].trx_count}=={len(self.holdings[pair.sell_spot.symbol].transactions)}')
+            # print(f'    -> buy_spot: {self.holdings[pair.buy_spot.symbol].trx_count}=={len(self.holdings[pair.buy_spot.symbol].transactions)}')
 
         for sym, spot in self.spots.items():
             if spot.symbol not in self.holdings:
                 self.holdings[spot.symbol] = Holding(spot.symbol)
+
+
             self.holdings[spot.symbol].add_trx_count(spot.trx_count)
+            self.holdings[spot.symbol].transactions.extend(spot.transactions)
+
+            print(f'-> spot: {spot.trx_count} {len(spot.transactions)} {self.holdings[spot.symbol].trx_count} {len(self.holdings[spot.symbol].transactions)}')
 
         # TODO
         #for fee_id, fee in self.fees.items():
+
+        # print(f'----- pairs -----')
+        # print(dumps(self.pairs, indent=2, cls=ComplexEncoder))
+        # print('------------------')
+
+        # print(f'----- spots -----')
+        # print(dumps(self.spots, indent=2, cls=ComplexEncoder))
+        # print('------------------')
 
         # print(f'----- holdings A -----')
         # print(dumps(self.holdings, indent=2, cls=ComplexEncoder))
         # print('-----------------------')
 
         for hsym, holding in self.holdings.items():
-            # print(f'-> holding: {holding}')
-            # if convert == holding.symbol:
-            #     self.costs = Spot(s=holding.symbol)
-                #self.costs.quantity = holding.quantity * -1
 
             for pair_id, pair in self.pairs.items():
-                if hsym == pair.sell_spot.symbol:
+
+                if holding.symbol == pair.sell_spot.symbol:
                     holding.sub_spot(pair.sell_spot)
-                elif hsym == pair.buy_spot.symbol:
+                    #holding.transactions.extend(pair.transactions)
+
+                elif holding.symbol == pair.buy_spot.symbol:
                     holding.add_spot(pair.buy_spot)
+                    #holding.transactions.extend(pair.transactions)
+
+                else:
+                    raise ValueError(f'hs={holding.symbol} ps={pair.sell_spot} pb={pair.buy_spot}')
 
             for ssym, spot in self.spots.items():
-                if ssym == hsym:
+                if holding.symbol == spot.symbol:
                     holding.add_spot(spot)
+                    #holding.transactions.extend(spot.transactions)
 
         # print(f'----- holdings B -----')
         # print(dumps(self.holdings, indent=2, cls=ComplexEncoder))
@@ -226,6 +252,8 @@ class Portfolio():
                     cquote = quotes.get(convert, pair.buy_spot.symbol)
                     pair.value = cquote * pair.buy_spot.quantity
                     pair.profit = pair.value - pair.sell_spot.quantity
+
+
                 elif pair.buy_spot.symbol == convert:
                     raise NotImplementedError()
                 else:
@@ -237,6 +265,8 @@ class Portfolio():
                     pair.profit = bvalue - svalue
 
                     pair.value = bvalue
+
+                transaction.profit = pair.profit
 
             else:
                 spot = transaction.spot
@@ -252,9 +282,15 @@ class Portfolio():
                 else:
                     raise ValueError(f'Unknown Transaction type: {transaction.ttype}')
 
+                transaction.profit = spot.profit
+
+        # print('------- transactions -------')
+        # print(dumps(self.transactions, indent=2, cls=ComplexEncoder))
+        # print('----------------------------')
+
         # Holdings
         for hsym, holding in self.holdings.items():
-            # print(f'-> holding: {holding}')
+            print(f'-> holding: {holding}')
 
             if holding.symbol == convert:
                 self.costs = Spot(s=holding.symbol)
@@ -265,6 +301,11 @@ class Portfolio():
 
             holding.quote = quote
             holding.value = quote * holding.quantity
+
+            holding.profit = 0.0
+            for transaction in holding.transactions:
+                print(f'    -> transaction: {transaction.profit} {transaction}')
+                holding.profit += transaction.profit
 
         # print('------- holdings C -------')
         # print(dumps(self.holdings, indent=2, cls=ComplexEncoder))

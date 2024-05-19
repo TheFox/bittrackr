@@ -18,6 +18,7 @@ class Transaction():
     pair: Pair|None
     is_pair: bool
     spot: Spot|None
+    profit: float|None
 
     def __init__(self, pair: str, d: dict):
         self.pair_s = pair
@@ -31,6 +32,7 @@ class Transaction():
         self.note = None
         self.pair = None
         self.spot = None
+        self.profit = None
 
         if '/' in self.pair_s:
             self.is_pair = True
@@ -70,17 +72,18 @@ class Transaction():
         else:
             self.spot = Spot(s=self.pair_s, q=self.quantity)
 
-        print(f'self={self}')
+        # print(f'self={self}')
 
     def __repr__(self):
         return f'Transaction[{self.pair_s},t={self.ttype},p={self.pair},s={self.spot}]'
 
     def to_json(self):
         return {
-            'pair': self.pair_s,
+            'pair_name': self.pair_s,
+            'pair': self.pair,
             'ttype': self.ttype,
             'price': self.price,
             'quantity': self.quantity,
-            'pair': self.pair,
             'spot': self.spot,
+            'profit': self.profit,
         }
