@@ -77,7 +77,7 @@ class App():
         self.running = True
 
         portfolio = self._traverse(self.base_dir)
-        portfolio.calc()
+        portfolio.calc(self.config['convert'])
 
         # print('------- portfolio -------')
         # print(dumps(portfolio, indent=2, cls=ComplexEncoder))
@@ -204,7 +204,6 @@ class App():
         sell_symbols = ', '.join(list(portfolio.sell_symbols))
         buy_symbols = ', '.join(list(portfolio.buy_symbols))
 
-        cost_spot = Spot(s=self.config['convert']) #  TODO move to portfolio
         holdings = {
             'sym': [],
             'quant': [],
@@ -215,9 +214,7 @@ class App():
         sorted_holdings = sorted(portfolio.holdings.items(), key=_sort_holdings, reverse=True)
         total_value = 0.0
         for hsym, holding in sorted_holdings:
-            if holding.symbol == self.config['convert']:
-                cost_spot.quantity = holding.quantity * -1
-            else:
+            if holding.symbol != self.config['convert']:
                 holdings['sym'].append(holding.symbol)
                 holdings['quant'].append(holding.quantity)
                 holdings['quote'].append(holding.quote)
@@ -226,7 +223,8 @@ class App():
 
             total_value += holding.value
 
-        profit = total_value - cost_spot.quantity
+        cost = portfolio.cost.quantity  #+ portfolio.fee_value
+        profit = total_value - cost
 
         print('-' * self.terminal.columns)
         print(f'Portfolio: {portfolio.name} (level={portfolio.level})')
@@ -237,7 +235,7 @@ class App():
         if buy_symbols != '':
             print(f'Buy  symbols: {buy_symbols}')
 
-        if cost_spot.quantity >= 0.0:
+        if cost >= 0.0:
             costs_color = fg.red
         else:
             costs_color = rs.all
@@ -248,7 +246,7 @@ class App():
             profit_color = fg.red
 
         print(f'Fees:   {portfolio.fee_value:>10.2f} {self.config["convert"]}')
-        print(f'Costs:  {costs_color}{cost_spot.quantity:>10.2f} {cost_spot.symbol}{rs.all}')
+        print(f'Costs:  {costs_color}{cost:>10.2f} {portfolio.cost.symbol}{rs.all}')
         print(f'Value:  {total_value:>10.2f} {self.config["convert"]}')
         print(f'Profit: {profit_color}{profit:>10.2f} {self.config["convert"]}{rs.all}')
 
@@ -316,9 +314,9 @@ class App():
                 try:
                     df = pd.DataFrame(data=transactions)
                 except ValueError as error:
-                    print(f'----- transactions -----')
+                    print('----- transactions -----')
                     print(dumps(transactions, indent=2))
-                    print('----------------------------')
+                    print('------------------------')
 
                     raise error
 

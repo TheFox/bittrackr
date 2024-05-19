@@ -22,6 +22,7 @@ class Portfolio():
     pairs: dict[str, Pair]
     spots: dict[str, Spot]
     holdings: dict[str, Holding]
+    cost: Spot|None
 
     def __init__(self, name: str, parent: 'Portfolio' = None):
         self.name = name
@@ -41,6 +42,7 @@ class Portfolio():
         self.pairs = {}
         self.spots = {}
         self.holdings = {}
+        self.cost = None
 
     def to_json(self):
         return {
@@ -118,7 +120,7 @@ class Portfolio():
 
         pfee.add_spot(fee)
 
-    def calc(self):
+    def calc(self, convert: str):
         for sub_portfolio in self.subs:
             sub_portfolio.calc()
 
@@ -148,6 +150,10 @@ class Portfolio():
 
         for hsym, holding in self.holdings.items():
             # print(f'-> calc holding: {holding}')
+
+            if convert == holding.symbol:
+                self.cost = Spot(s=holding.symbol)
+                self.cost.quantity = holding.quantity * -1
 
             for pair_id, pair in self.pairs.items():
                 if hsym == pair.sell_spot.symbol:
