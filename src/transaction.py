@@ -34,7 +34,7 @@ class Transaction():
         self.pair = None
         self.spot = None
         self.profit = None
-        self.state = '---'
+        self.state = None
 
         if '/' in self.pair_s:
             self.is_pair = True
@@ -72,9 +72,16 @@ class Transaction():
 
             self.pair = pair
 
-            if self.ttype == 'buy' and self.state is None:
+            if self.state is None:
+                if self.ttype == 'buy':
+                    self.state = 'open'
+                elif self.ttype == 'sell':
+                    self.state = '---'
+
+            if self.state is None:
                 self.state = 'open'
         else:
+            self.state = '---'
             self.spot = Spot(s=self.pair_s, q=self.quantity)
 
         # print(f'self={self}')
