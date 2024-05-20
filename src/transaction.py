@@ -19,6 +19,7 @@ class Transaction():
     is_pair: bool
     spot: Spot|None
     profit: float|None
+    state: str|None
 
     def __init__(self, pair: str, d: dict):
         self.pair_s = pair
@@ -33,6 +34,7 @@ class Transaction():
         self.pair = None
         self.spot = None
         self.profit = None
+        self.state = '---'
 
         if '/' in self.pair_s:
             self.is_pair = True
@@ -69,6 +71,9 @@ class Transaction():
             pair.buy_spot = Spot(s=self.buy_symbol, q=self.quantity)
 
             self.pair = pair
+
+            if self.ttype == 'buy' and self.state is None:
+                self.state = 'open'
         else:
             self.spot = Spot(s=self.pair_s, q=self.quantity)
 

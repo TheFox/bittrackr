@@ -315,6 +315,7 @@ class App():
             transactions = {
                 'date': [],
                 'type': [],
+                'state': [],
                 'pair': [],
                 'quant': [],
                 'price': [], # transaction price
@@ -332,6 +333,7 @@ class App():
 
                 transactions['date'].append(transaction.date)
                 transactions['type'].append(transaction.ttype)
+                transactions['state'].append(transaction.state)
 
                 if transaction.is_pair:
                     transactions['pair'].append(transaction.pair.name)
