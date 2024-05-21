@@ -131,8 +131,6 @@ class Portfolio():
             if pair.sell_spot.symbol not in self.holdings:
                 self.holdings[pair.sell_spot.symbol] = Holding(pair.sell_spot.symbol)
 
-            # print(f'-> pair: {trx_count}')
-
             self.holdings[pair.sell_spot.symbol].add_trx_count(trx_count)
             self.holdings[pair.sell_spot.symbol].transactions.extend(pair.transactions)
 
@@ -142,33 +140,15 @@ class Portfolio():
             self.holdings[pair.buy_spot.symbol].add_trx_count(trx_count)
             self.holdings[pair.buy_spot.symbol].transactions.extend(pair.transactions)
 
-            # print(f'    -> sell_spot: {self.holdings[pair.sell_spot.symbol].trx_count}=={len(self.holdings[pair.sell_spot.symbol].transactions)}')
-            # print(f'    -> buy_spot: {self.holdings[pair.buy_spot.symbol].trx_count}=={len(self.holdings[pair.buy_spot.symbol].transactions)}')
-
         for sym, spot in self.spots.items():
             if spot.symbol not in self.holdings:
                 self.holdings[spot.symbol] = Holding(spot.symbol)
 
-
             self.holdings[spot.symbol].add_trx_count(spot.trx_count)
             self.holdings[spot.symbol].transactions.extend(spot.transactions)
 
-            # print(f'-> spot: {spot.trx_count} {len(spot.transactions)} {self.holdings[spot.symbol].trx_count} {len(self.holdings[spot.symbol].transactions)}')
-
         # TODO
         #for fee_id, fee in self.fees.items():
-
-        # print(f'----- pairs -----')
-        # print(dumps(self.pairs, indent=2, cls=ComplexEncoder))
-        # print('------------------')
-
-        # print(f'----- spots -----')
-        # print(dumps(self.spots, indent=2, cls=ComplexEncoder))
-        # print('------------------')
-
-        # print(f'----- holdings A -----')
-        # print(dumps(self.holdings, indent=2, cls=ComplexEncoder))
-        # print('-----------------------')
 
         for hsym, holding in self.holdings.items():
 
@@ -247,7 +227,6 @@ class Portfolio():
                     pair.value = cquote * pair.buy_spot.quantity
                     pair.profit = pair.value - pair.sell_spot.quantity
 
-
                 elif pair.buy_spot.symbol == convert:
                     raise NotImplementedError()
                 else:
@@ -284,8 +263,6 @@ class Portfolio():
 
         # Holdings
         for hsym, holding in self.holdings.items():
-            # print(f'-> holding: {holding}')
-
             if holding.symbol == convert:
                 self.costs = Spot(s=holding.symbol)
                 self.costs.quantity = holding.quantity * -1
@@ -298,7 +275,6 @@ class Portfolio():
 
             holding.profit = 0.0
             for transaction in holding.transactions:
-                # print(f'    -> transaction: {transaction.profit} {transaction}')
                 holding.profit += transaction.profit
 
         # print('------- holdings C -------')
