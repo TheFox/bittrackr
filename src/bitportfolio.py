@@ -286,22 +286,6 @@ class App():
         if len(holdings['sym']) > 0:
             df = pd.DataFrame(data=holdings)
 
-            #df.style.apply(_color_negative_red)
-            #df = df.style.map(_color_negative_red)
-            # df.style.format({
-            #     'quote': '{:.2f}',
-            #     'value': '{:.2f}',
-            #     'profit': '{:.2f}',
-            # })
-
-            # df['quant'] = df['quant'].map('{:.5f}'.format)
-            # df['quote'] = df['quote'].map('{:.2f}'.format)
-            # df['value'] = df['value'].map('{:.2f}'.format)
-            # df['profit'] = df['profit'].map('{:.2f}'.format)
-            #df['profit'] = df['profit'].apply(lambda x: '{:.5f}'.format(x))
-            #df['profit'] = df['profit'].apply(_format_profit)
-            #df['profit'] = df['profit'].map(_format_profit)
-
             df.rename(columns={'price': f'price({self.config["convert"]})'}, inplace=True)
             df.rename(columns={'quote': f'quote({self.config["convert"]})'}, inplace=True)
             df.rename(columns={'value': f'value({self.config["convert"]})'}, inplace=True)
@@ -383,11 +367,6 @@ class App():
                     'profit': '{:.2f}',
                 })
 
-                # df['quote'] = df['quote'].map('{:.2f}'.format)
-                # df['value'] = df['value'].map('{:.2f}'.format)
-                # df['profit'] = df['profit'].map('{:.2f}'.format)
-                #df['profit'] = df['profit'].apply(_format_profit)
-
                 df.rename(columns={'quote': f'quote({self.config["convert"]})'}, inplace=True)
                 df.rename(columns={'value': f'value({self.config["convert"]})'}, inplace=True)
                 df.rename(columns={'profit': f'profit({self.config["convert"]})'}, inplace=True)
@@ -395,11 +374,6 @@ class App():
                 df.rename(columns={'sells': 'ssym'}, inplace=True)
                 df.rename(columns={'buyq': 'bquant'}, inplace=True)
                 df.rename(columns={'buys': 'bsym'}, inplace=True)
-
-                #df = df.style.format(precision=3, thousands=',', decimal='.')
-                #df.style.format(precision=3, thousands=',', decimal='.')
-                #df.style = df.style.format(precision=3, thousands=',', decimal='.')
-
 
                 df_s = df.to_string(index=False)
                 print()
