@@ -318,6 +318,7 @@ class App():
                 transactions['date'].append(transaction.date)
                 transactions['type'].append(transaction.ttype)
                 transactions['state'].append(transaction.state)
+                transactions['profit'].append(transaction.profit)
 
                 if transaction.is_pair:
                     transactions['pair'].append(transaction.pair.name)
@@ -325,7 +326,6 @@ class App():
                     transactions['price'].append(transaction.price)
                     transactions['quote'].append(transaction.cprice)
                     transactions['value'].append(transaction.pair.value)
-                    transactions['profit'].append(transaction.pair.profit)
 
                     if transaction.ttype == 'buy':
                         transactions['sellq'].append(transaction.pair.sell_spot.quantity)
@@ -345,7 +345,6 @@ class App():
                     transactions['price'].append('---')
                     transactions['quote'].append(transaction.spot.price)
                     transactions['value'].append(transaction.spot.value)
-                    transactions['profit'].append(transaction.spot.profit)
                     transactions['sellq'].append('---')
                     transactions['sells'].append('---')
                     transactions['buyq'].append('---')
@@ -375,7 +374,26 @@ class App():
                 df.rename(columns={'buyq': 'bquant'}, inplace=True)
                 df.rename(columns={'buys': 'bsym'}, inplace=True)
 
-                df_s = df.to_string(index=False)
+                df_cols = [
+                    'date',
+                    'type',
+                    'state',
+                    'pair',
+                    'quant',
+                    'price',
+                ]
+                if self.filter_symbol is None:
+                    df_cols += [f'quote({self.config["convert"]})']
+                df_cols += [
+                    'value(EUR)',
+                    'profit(EUR)',
+                    'ssym',
+                    'squant',
+                    'bsym',
+                    'bquant',
+                ]
+
+                df_s = df.to_string(index=False, columns=df_cols)
                 print()
                 print(df_s)
 

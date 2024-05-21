@@ -8,8 +8,8 @@
                 "price": 20000,
                 "quantity": 30,
                 "fee": [1.99, "EUR"],
-                "location": "My Exchange",
-                "note": "H4ck the W0rld"
+                "note": "H4ck the W0rld",
+                "state": "open"
             }
         ]
     }
