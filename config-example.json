@@ -8,12 +8,6 @@
         "SOL",
         "XRP"
     ],
-    "portfolio": {
-        "symbols": [
-            "BTC",
-            "XRP"
-        ]
-    },
     "data_provider": {
         "id": "cmc",
         "api": {
