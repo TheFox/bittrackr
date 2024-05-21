@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import sys
 import signal
 import shutil
 from typing import cast
@@ -13,7 +12,6 @@ from sty import fg, bg, ef, rs
 from pathlib import Path
 from portfolio import Portfolio
 from transaction import Transaction
-from spot import Spot
 from apptypes import ConvertSymbols
 from json_helper import ComplexEncoder
 from portfolio import Holding
@@ -80,11 +78,6 @@ class App():
         else:
             self.quotes_file = Path(quotes_file)
 
-        # print(f'-> change_dir: {self.change_dir}')
-        # print(f'-> base_dir: {self.base_dir}')
-        # print(f'-> config_path: {self.config_path}')
-        # print(f'-> quotes_file: {self.quotes_file}')
-
         if self.config_path.exists():
             with open(self.config_path, 'r') as f:
                 self.config = loads(f.read())
@@ -101,14 +94,7 @@ class App():
         portfolio = self._traverse(self.base_dir)
         portfolio.calc()
 
-        # print('------- portfolio -------')
-        # print(dumps(portfolio, indent=2, cls=ComplexEncoder))
-        # print('------------------------')
-
         psymbols = portfolio.get_convert_symbols(self.config['convert'])
-        # print(f'----- psymbols -----')
-        # print(dumps(psymbols, indent=2))
-        # print('----------------------------')
 
         load_quotes = False
         if self.quotes_file is not None:
@@ -121,19 +107,11 @@ class App():
         if not load_quotes:
             quotes = self._get_quotes(psymbols, self.config['convert'])
 
-        # print(f'----- quotes -----')
-        # print(dumps(quotes, indent=2, cls=ComplexEncoder))
-        # print('----------------------------')
-
         if self.quotes_file is not None:
             if self.save:
                 print(f'-> save quotes file: {self.quotes_file}')
                 with open(self.quotes_file, 'w') as f:
                     dump(quotes.to_json(), f, indent=2)
-
-        # print('------- quotes -------')
-        # print(dumps(quotes, indent=2, cls=ComplexEncoder))
-        # print('------------------------')
 
         portfolio.quotes(quotes, self.config['convert'])
         self._print_portfolio(portfolio)
@@ -170,15 +148,12 @@ class App():
                         handle_trx = True
 
                         if self.filter_symbol is not None:
-                            # print(f'-> filter_symbol: c1={transaction_o.sell_symbol != self.filter_symbol} c2={transaction_o.buy_symbol != self.filter_symbol}')
                             if transaction_o.sell_symbol != self.filter_symbol and transaction_o.buy_symbol != self.filter_symbol and (transaction_o.spot is not None and transaction_o.spot.symbol != self.filter_symbol or transaction_o.spot is None):
                                 handle_trx = False
 
                         if self.filter_ttype is not None:
                             if transaction_o.ttype != self.filter_ttype:
                                 handle_trx = False
-
-                        # print(f'-> handle_trx: {transaction_o} {handle_trx}')
 
                         if handle_trx:
                             portfolio.add_transaction(transaction_o)
@@ -195,7 +170,6 @@ class App():
         quotes = Quotes()
 
         for convert, sym_list in symbols.items():
-            # print(f'-> convert {convert} {sym_list}')
             data = data_fetch_func(
                 api_host=dp_config['api']['host'],
                 api_key=dp_config['api']['key'],
@@ -203,20 +177,12 @@ class App():
                 symbols=sym_list,
             )
 
-            # print('----------- data -----------')
-            # print(dumps(data, indent=2))
-            # print('----------------------------')
-
             for symbol in sym_list:
                 if symbol in data['data']:
                     sdata = data['data'][symbol]
 
                     if convert in sdata[0]['quote']:
                         quotes.add(convert, symbol, sdata[0]['quote'][convert]['price'])
-
-        # print(f'----- quotes -----')
-        # print(dumps(quotes, indent=2, cls=ComplexEncoder))
-        # print('--------------------------')
 
         return quotes
 
@@ -240,8 +206,6 @@ class App():
         for hsym, holding in sorted_holdings:
             if holding.symbol == self.config['convert']:
                 continue
-
-            # print(f'-> holding: {holding}')
 
             holdings['sym'].append(holding.symbol)
             holdings['quant'].append(holding.quantity)

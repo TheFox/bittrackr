@@ -112,8 +112,6 @@ class App():
                 if not self.running:
                     break
 
-            #clear()
-
     def _data_update(self):
         status('Data update')
         dp_config = self.config['data_provider']

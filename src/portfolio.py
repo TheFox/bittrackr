@@ -164,10 +164,6 @@ class Portfolio():
                 if holding.symbol == spot.symbol:
                     holding.add_spot(spot)
 
-        # print(f'----- holdings B -----')
-        # print(dumps(self.holdings, indent=2, cls=ComplexEncoder))
-        # print('-----------------------')
-
     def get_convert_symbols(self, convert: str) -> ConvertSymbols:
         symbols = {}
 
@@ -257,10 +253,6 @@ class Portfolio():
 
                 transaction.profit = spot.profit
 
-        # print('------- transactions -------')
-        # print(dumps(self.transactions, indent=2, cls=ComplexEncoder))
-        # print('----------------------------')
-
         # Holdings
         for hsym, holding in self.holdings.items():
             if holding.symbol == convert:
@@ -276,10 +268,6 @@ class Portfolio():
             holding.profit = 0.0
             for transaction in holding.transactions:
                 holding.profit += transaction.profit
-
-        # print('------- holdings C -------')
-        # print(dumps(self.holdings, indent=2, cls=ComplexEncoder))
-        # print('------------------------')
 
         # Fees
         for fee_id, fee in self.fees.items():

@@ -29,7 +29,6 @@ class Pair():
             'buy_spot': self.buy_spot,
             'value': self.value,
             'profit': self.profit,
-            #'transactions': self.transactions,
         }
 
     def _init_pair(self, pair: 'Pair'):

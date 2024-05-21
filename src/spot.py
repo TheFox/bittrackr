@@ -58,15 +58,8 @@ class Holding(Spot):
         self.value = 0.0
         self.profit = 0.0
 
-
     def to_json(self):
         return {
             **super().to_json(),
-            #'symbol': self.symbol,
-            #'quantity': self.quantity,
             'quote': self.quote,
-            #'value': self.value,
-            #'profit': self.profit,
-            #'trx_count': self.trx_count,
-            #'transactions': len(self.transactions),
         }
