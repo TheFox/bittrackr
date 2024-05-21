@@ -88,6 +88,11 @@ class App():
         self.load = load
         self.save = save
 
+        self.holding_minimum = 0.0
+        if 'holding_minimum' in self.config:
+            self.holding_minimum = self.config['holding_minimum']
+        print(f'-> self.holding_minimum: {self.holding_minimum}')
+
     def run(self):
         self.running = True
 
@@ -205,6 +210,9 @@ class App():
         total_value = 0.0
         for hsym, holding in sorted_holdings:
             if holding.symbol == self.config['convert']:
+                continue
+
+            if self.holding_minimum is not None and holding.quantity < self.holding_minimum:
                 continue
 
             holdings['sym'].append(holding.symbol)

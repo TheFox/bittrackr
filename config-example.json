@@ -8,6 +8,7 @@
         "SOL",
         "XRP"
     ],
+    "holding_minimum": 0.001,
     "data_provider": {
         "id": "cmc",
         "api": {
