@@ -12,6 +12,17 @@ from datetime import datetime
 CLEAR_SCREEN='\033[2J'
 JUMP_BEGINNING='\033[1;1H'
 
+def status(text: str):
+    # Jump to line 3.
+    print('\033[3;1H', end='', flush=True)
+    print(f'\033[2K  {text}\033[1G', end='', flush=True)
+    sleep(0.1)
+
+def clear():
+    # Jump to line 3.
+    print('\033[3;1H', end='', flush=True)
+    print('\033[2K\033[1G', end='', flush=True)
+
 class App():
     config: dict
     _rest_updates: int
@@ -62,7 +73,6 @@ class App():
             'lines': terminal.lines,
             'columns': terminal.columns,
         }
-        # self.screen['lines'] = 3
 
     def run(self):
         self.running = True
@@ -79,25 +89,33 @@ class App():
         while self.running and self._rest_updates > 0:
             cycle_n += 1
 
+            # Jump to top left.
+            print(JUMP_BEGINNING, end='', flush=True)
+
+            print(f'Update Interval: {self.config["update_interval"]} | Rest Updates: {self._rest_updates}')
+
+            now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            print(f'Last update: {now}')
+
             self._data_update()
             self._screen_update()
 
             self._rest_updates -= 1
-
-            print(f'update_interval={self.config["update_interval"]} rest_updates={self._rest_updates}')
 
             if self._rest_updates == 0:
                 self.shutdown('max updates reached')
                 break
 
             for n in sleep_list:
-                print(f'  next update in {n}    \r', end='', flush=True)
+                status(f'Next update in {n}')
                 sleep(1)
                 if not self.running:
                     break
-            print('\033[2K', end='', flush=True)
+
+            #clear()
 
     def _data_update(self):
+        status('Data update')
         dp_config = self.config['data_provider']
 
         if dp_config['id'] == 'default':
@@ -108,6 +126,7 @@ class App():
             raise ValueError(f'Unknown data provider: {dp_config["id"]}')
 
     def _data_update_from_cmc(self, dp_config: dict):
+        status('Get data from CMC ...')
         response = cmc_get_quotes(
             api_host=dp_config['api']['host'],
             api_key=dp_config['api']['key'],
@@ -115,6 +134,7 @@ class App():
             symbols=self.config['symbols'],
         )
         for sym, sdata in response['data'].items():
+            status(f'Process sym "{sym}" ...')
             if len(sdata) == 0:
                 continue
 
@@ -138,14 +158,12 @@ class App():
 
             self.data[sym]['prev_price'] = self.data[sym]['dp']['quote_price']
 
-    def _screen_update(self):
-        # Jump to top left.
-        print(JUMP_BEGINNING, end='', flush=True)
+        status(f'Processed {len(self.data)} symbols')
 
-        now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        print(f'Last update: {now}')
+    def _screen_update(self):
         print()
-        print('SYM     PRICE      24%     24V%              24V  Dominance')
+        print()
+        print('SYM     PRICE      24%   24Vol%            24Vol  Dominance')
         print('-----------------------------------------------------------')
 
         for sym, coin in self.data.items():
