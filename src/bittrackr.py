@@ -220,19 +220,19 @@ class App():
 
 def main():
     parser = argparse.ArgumentParser(prog='bittrackr', description='BitTrackr')
-    parser.add_argument('-c', '--config', type=str, nargs=1, required=False, help='Path to Config File', default=[None])
+    parser.add_argument('-c', '--config', type=str, nargs='?', required=False, help='Path to Config File', default='var/config.json')
     parser.add_argument('-s', '--scenario', type=str, nargs='?', required=False, help='Scenario', default='all')
-    parser.add_argument('-i', '--update-interval', type=int, nargs=1, required=False, help='Overwrite update_interval in config', default=[300])
-    parser.add_argument('-u', '--max-updates', type=int, nargs=1, required=False, help='Max Updates', default=[None])
+    parser.add_argument('-i', '--update-interval', type=int, nargs='?', required=False, help='Overwrite update_interval in config', default=120)
+    parser.add_argument('-u', '--max-updates', type=int, nargs='?', required=False, help='Max Updates')
 
     args = parser.parse_args()
     print(args)
 
     app = App(
-        args.config[0],
+        args.config,
         scenario=args.scenario,
-        update_interval=args.update_interval[0],
-        max_updates=args.max_updates[0],
+        update_interval=args.update_interval,
+        max_updates=args.max_updates,
     )
 
     signal.signal(signal.SIGINT, lambda sig, frame: app.shutdown('SIGINT'))
