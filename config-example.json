@@ -1,13 +1,11 @@
 {
     "update_interval": 60,
     "convert": "EUR",
-    "symbols": [
-        "BTC",
-        "ETH",
-        "LTC",
-        "SOL",
-        "XRP"
-    ],
+    "scenario": {
+        "all": ["BTC", "ETH", "BNB", "SOL"],
+        "memes": ["DOGE", "SHIB"],
+        "shit": ["XRP", "EOS"]
+    },
     "holding_minimum": 0.001,
     "data_provider": {
         "id": "cmc",

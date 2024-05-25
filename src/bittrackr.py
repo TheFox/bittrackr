@@ -30,7 +30,7 @@ class App():
     data: dict
     screen: dict
 
-    def __init__(self, config_path: str|None, update_interval: int|None = None, max_updates: int|None = None):
+    def __init__(self, config_path: str|None, scenario: str = 'all', update_interval: int|None = None, max_updates: int|None = None):
         print(f'-> config path: {config_path}')
         if config_path is None:
             self.config = self._default_config()
@@ -44,6 +44,11 @@ class App():
                 **config,
             }
 
+        self.scenario = scenario
+        self.symbols = ["BTC", "ETH", "SOL"]
+        if self.scenario in self.config['scenario']:
+            self.symbols = self.config['scenario'][self.scenario]
+
         if update_interval is not None:
             self.config['update_interval'] = update_interval
 
@@ -53,7 +58,7 @@ class App():
             self._rest_updates = max_updates
 
         self.data = {}
-        for sym in self.config['symbols']:
+        for sym in self.symbols:
             self.data[sym] = {
                 'symbol': sym,
                 'direction': 0,
@@ -92,7 +97,7 @@ class App():
             # Jump to top left.
             print(JUMP_BEGINNING, end='', flush=True)
 
-            print(f'Update Interval: {self.config["update_interval"]} | Rest Updates: {self._rest_updates}')
+            print(f'Update Interval: {self.config["update_interval"]} | Rest Updates: {self._rest_updates} | Scenario: {self.scenario}')
 
             now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             print(f'Last update: {now}')
@@ -129,7 +134,7 @@ class App():
             api_host=dp_config['api']['host'],
             api_key=dp_config['api']['key'],
             convert=self.config['convert'],
-            symbols=self.config['symbols'],
+            symbols=self.symbols,
         )
         for sym, sdata in response['data'].items():
             status(f'Process sym "{sym}" ...')
@@ -204,7 +209,10 @@ class App():
         return {
             'update_interval': 60,
             'convert': 'USD',
-            'symbols': ['BTC'],
+            'scenario': {
+                'all': ['BTC', 'ETH', 'BNB', 'SOL'],
+                'memes': ['DOGE', 'SHIB']
+            },
             'data_provider': {
                 'id': 'default',
             },
@@ -213,6 +221,7 @@ class App():
 def main():
     parser = argparse.ArgumentParser(prog='bittrackr', description='BitTrackr')
     parser.add_argument('-c', '--config', type=str, nargs=1, required=False, help='Path to Config File', default=[None])
+    parser.add_argument('-s', '--scenario', type=str, nargs='?', required=False, help='Scenario', default='all')
     parser.add_argument('-i', '--update-interval', type=int, nargs=1, required=False, help='Overwrite update_interval in config', default=[300])
     parser.add_argument('-u', '--max-updates', type=int, nargs=1, required=False, help='Max Updates', default=[None])
 
@@ -221,6 +230,7 @@ def main():
 
     app = App(
         args.config[0],
+        scenario=args.scenario,
         update_interval=args.update_interval[0],
         max_updates=args.max_updates[0],
     )
