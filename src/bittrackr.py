@@ -15,7 +15,7 @@ JUMP_BEGINNING='\033[1;1H'
 def status(text: str):
     # Jump to line 3.
     print('\033[3;1H', end='', flush=True)
-    print(f'\033[2K  {text}\033[1G', end='', flush=True)
+    print(f'\033[2K   -> {text}\033[1G', end='', flush=True)
     sleep(0.1)
 
 def clear():
@@ -166,11 +166,11 @@ class App():
     def _screen_update(self):
         print()
         print()
-        print('SYM     PRICE      24%   24Vol%            24Vol  Dominance')
-        print('-----------------------------------------------------------')
+        print('SYM      PRICE      24%   24Vol%            24Vol  Dominance')
+        print('------------------------------------------------------------')
 
         for sym, coin in self.data.items():
-            out_r = '{:4s} {:>8.2f}{} {:>8.2f} {:>8.2f} {:>16.2f}     {:>6.2f}'.format(
+            out_r = '{:5s} {:>8.2f}{} {:>8.2f} {:>8.2f} {:>16.2f}     {:>6.2f}'.format(
                 sym,
                 coin['dp']['quote_price'],
                 rs.all,
