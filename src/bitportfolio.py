@@ -91,7 +91,7 @@ class App():
         self.holding_minimum = 0.0
         if 'holding_minimum' in self.config:
             self.holding_minimum = self.config['holding_minimum']
-        print(f'-> self.holding_minimum: {self.holding_minimum}')
+        print(f'-> holding minimum: {self.holding_minimum}')
 
     def run(self):
         self.running = True
