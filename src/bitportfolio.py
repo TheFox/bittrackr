@@ -132,10 +132,7 @@ class App():
 
         for file in dir.iterdir():
             if file.is_dir():
-                nlevel = level + 1
-                if self.max_depth is not None and nlevel >= self.max_depth:
-                    continue
-
+                nlevel = portfolio.level + 1
                 sub_portfolio = self._traverse(file, portfolio, nlevel)
                 portfolio.add_portfolio(sub_portfolio)
 
@@ -370,6 +367,11 @@ class App():
                 df_s = df.to_string(index=False, columns=df_cols)
                 print()
                 print(df_s)
+
+        nlevel = portfolio.level + 1
+        if self.max_depth is not None and nlevel > self.max_depth:
+            print(f'-> max depth reached: {nlevel}')
+            return
 
         subs = sorted(portfolio.subs, key=lambda p: p.name)
         for sub_portfolio in subs:
