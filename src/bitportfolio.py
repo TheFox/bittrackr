@@ -290,7 +290,6 @@ class App():
                 transactions['date'].append(transaction.date)
                 transactions['type'].append(transaction.ttype)
                 transactions['state'].append(transaction.state)
-                transactions['profit'].append(transaction.profit)
 
                 if transaction.is_pair:
                     transactions['pair'].append(transaction.pair.name)
@@ -300,11 +299,13 @@ class App():
                     transactions['value'].append(transaction.pair.value)
 
                     if transaction.ttype == 'buy':
+                        transactions['profit'].append(transaction.profit)
                         transactions['sellq'].append(transaction.pair.sell_spot.quantity)
                         transactions['sells'].append(transaction.pair.sell_spot.symbol)
                         transactions['buyq'].append(transaction.pair.buy_spot.quantity)
                         transactions['buys'].append(transaction.pair.buy_spot.symbol)
                     elif transaction.ttype == 'sell':
+                        transactions['profit'].append('---')
                         transactions['sellq'].append(transaction.pair.buy_spot.quantity)
                         transactions['sells'].append(transaction.pair.buy_spot.symbol)
                         transactions['buyq'].append(transaction.pair.sell_spot.quantity)
@@ -317,6 +318,7 @@ class App():
                     transactions['price'].append('---')
                     transactions['quote'].append(transaction.spot.price)
                     transactions['value'].append(transaction.spot.value)
+                    transactions['profit'].append('---')
                     transactions['sellq'].append('---')
                     transactions['sells'].append('---')
                     transactions['buyq'].append('---')
