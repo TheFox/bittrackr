@@ -91,9 +91,7 @@ class App():
         self.holding_minimum_amount = 0.0
         self.holding_minimum_ignore = []
         if 'holding_minimum' in self.config:
-            print(f'-> config: {self.config}')
             holding_minimum = self.config['holding_minimum']
-            print(f'-> holding_minimum: {holding_minimum}')
             self.holding_minimum_amount = holding_minimum['amount']
             self.holding_minimum_ignore = holding_minimum['ignore']
         print(f'-> holding minimum: {self.holding_minimum_amount}')
