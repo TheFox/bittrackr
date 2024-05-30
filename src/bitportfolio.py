@@ -302,7 +302,11 @@ class App():
                 'sellq': [],
                 'buys': [],
                 'buyq': [],
+                'accu': [],
             }
+
+            accumulated = 0.0
+
             sorted_transactions = sorted(portfolio.transactions, key=lambda t: t.date)
             sorted_transactions = cast(list[Transaction], sorted_transactions)
             for transaction in sorted_transactions:
@@ -319,12 +323,16 @@ class App():
                     transactions['value'].append(transaction.pair.value)
 
                     if transaction.ttype == 'buy':
+                        accumulated += transaction.pair.buy_spot.quantity
+
                         transactions['profit'].append(transaction.profit)
                         transactions['sellq'].append(transaction.pair.sell_spot.quantity)
                         transactions['sells'].append(transaction.pair.sell_spot.symbol)
                         transactions['buyq'].append(transaction.pair.buy_spot.quantity)
                         transactions['buys'].append(transaction.pair.buy_spot.symbol)
                     elif transaction.ttype == 'sell':
+                        accumulated -= transaction.pair.buy_spot.quantity
+
                         transactions['profit'].append('---')
                         transactions['sellq'].append(transaction.pair.buy_spot.quantity)
                         transactions['sells'].append(transaction.pair.buy_spot.symbol)
@@ -333,6 +341,11 @@ class App():
                     else:
                         raise ValueError(f'Unknown Transaction type: {transaction.ttype}')
                 else:
+                    if transaction.ttype == 'in':
+                        accumulated += transaction.spot.quantity
+                    elif transaction.ttype == 'out':
+                        accumulated -= transaction.spot.quantity
+
                     transactions['pair'].append(transaction.spot.symbol)
                     transactions['quant'].append(transaction.spot.quantity)
                     transactions['price'].append('---')
@@ -343,6 +356,10 @@ class App():
                     transactions['sells'].append('---')
                     transactions['buyq'].append('---')
                     transactions['buys'].append('---')
+
+                # if self.filter_symbol is not None:
+                    #accumulated += transaction.ttype
+                transactions['accu'].append(accumulated)
 
             if len(transactions['pair']) > 0:
                 try:
@@ -386,6 +403,9 @@ class App():
                     'bsym',
                     'bquant',
                 ]
+
+                if self.filter_symbol is not None:
+                    df_cols.append('accu')
 
                 df_s = df.to_string(index=False, columns=df_cols)
                 print()
