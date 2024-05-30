@@ -1,16 +1,19 @@
-[
-    {
-        "pair": "EUR/BTC",
-        "transactions": [
-            {
-                "date": "2018-12-31",
-                "type": "buy",
-                "price": 20000,
-                "quantity": 30,
-                "fee": [1.99, "EUR"],
-                "note": "H4ck the W0rld",
-                "state": "open"
-            }
-        ]
-    }
-]
+{
+    "ignore": false,
+    "pairs": [
+        {
+            "pair": "EUR/BTC",
+            "transactions": [
+                {
+                    "date": "2018-12-31",
+                    "type": "buy",
+                    "price": 20000,
+                    "quantity": 30,
+                    "fee": [1.99, "EUR"],
+                    "note": "H4ck the W0rld",
+                    "state": "open"
+                }
+            ]
+        }
+    ]
+}

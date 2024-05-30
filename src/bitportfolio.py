@@ -143,7 +143,18 @@ class App():
                 with open(file, 'r') as f:
                     json = loads(f.read())
 
-                for pair in json:
+                # print(f'--------- json ---------')
+                # print(dumps(json, indent=2, cls=ComplexEncoder))
+                # print('-------------------------')
+
+                if 'pairs' in json:
+                    pairs = json['pairs']
+                if 'ignore' in json:
+                    if json['ignore']:
+                        # print(f'-> ignore: {file}')
+                        continue
+
+                for pair in pairs:
                     for transaction_j in pair['transactions']:
                         transaction_o = Transaction(pair=pair['pair'], d=transaction_j)
 
@@ -181,10 +192,22 @@ class App():
 
             for symbol in sym_list:
                 if symbol in data['data']:
-                    sdata = data['data'][symbol]
+                    sdata = data['data'].get(symbol)
 
-                    if convert in sdata[0]['quote']:
-                        quotes.add(convert, symbol, sdata[0]['quote'][convert]['price'])
+                    if sdata is None or len(sdata) == 0:
+                        print(f'----- data ({symbol}) -----')
+                        print(dumps(data['data'], indent=2, cls=ComplexEncoder))
+                        print('------------------------')
+
+                        raise ValueError('sdata is empty')
+
+                    try:
+                        first = sdata[0]
+                    except IndexError as error:
+                        raise ValueError(f'sdata: {sdata}') from error
+
+                    if convert in first['quote']:
+                        quotes.add(convert, symbol, first['quote'][convert]['price'])
 
         return quotes
 
@@ -326,7 +349,7 @@ class App():
                     df = pd.DataFrame(data=transactions)
                 except ValueError as error:
                     print('----- transactions -----')
-                    print(dumps(transactions, indent=2))
+                    print(dumps(transactions, indent=2, cls=ComplexEncoder))
                     print('------------------------')
 
                     raise error
