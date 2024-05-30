@@ -88,10 +88,16 @@ class App():
         self.load = load
         self.save = save
 
-        self.holding_minimum = 0.0
+        self.holding_minimum_amount = 0.0
+        self.holding_minimum_ignore = []
         if 'holding_minimum' in self.config:
-            self.holding_minimum = self.config['holding_minimum']
-        print(f'-> holding minimum: {self.holding_minimum}')
+            print(f'-> config: {self.config}')
+            holding_minimum = self.config['holding_minimum']
+            print(f'-> holding_minimum: {holding_minimum}')
+            self.holding_minimum_amount = holding_minimum['amount']
+            self.holding_minimum_ignore = holding_minimum['ignore']
+        print(f'-> holding minimum: {self.holding_minimum_amount}')
+        print(f'-> holding min ignore: {self.holding_minimum_ignore}')
 
     def run(self):
         self.running = True
@@ -232,8 +238,9 @@ class App():
             if holding.symbol == self.config['convert']:
                 continue
 
-            if self.holding_minimum is not None and holding.quantity < self.holding_minimum:
-                continue
+            if self.holding_minimum_amount is not None and holding.quantity < self.holding_minimum_amount:
+                if holding.symbol not in self.holding_minimum_ignore:
+                    continue
 
             holdings['sym'].append(holding.symbol)
             holdings['quant'].append(holding.quantity)

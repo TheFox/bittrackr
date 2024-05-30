@@ -6,7 +6,10 @@
         "memes": ["DOGE", "SHIB"],
         "shit": ["XRP", "EOS"]
     },
-    "holding_minimum": 0.001,
+    "holding_minimum": {
+        "amount": 0.001,
+        "ignore": ["BTC", "ETH", "USDT", "USDC"]
+    },
     "data_provider": {
         "id": "cmc",
         "api": {
