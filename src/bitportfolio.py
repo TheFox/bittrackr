@@ -430,7 +430,6 @@ def main():
     pd.set_option('display.max_colwidth', None)
     pd.set_option('display.max_columns', None)
     pd.set_option('display.max_rows', None)
-    pd.options.display.float_format = '{:,.2f}'.format
 
     parser = ArgumentParser(prog='bitportfolio', description='BitPortfolio')
     parser.add_argument('-c', '--config', type=str, nargs='?', required=False, help='Path to Config File')
