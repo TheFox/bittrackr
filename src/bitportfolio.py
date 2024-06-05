@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
+import yaml
 import signal
 import shutil
-from typing import cast
 import pandas as pd
-
+from typing import cast
 from argparse import ArgumentParser, BooleanOptionalAction
 from json import loads, load, dumps, dump
 from cmc import get_quotes as cmc_get_quotes
@@ -144,11 +144,15 @@ class App():
                 if not str(file).endswith('.json'):
                     continue
 
+                raw_data = None
                 with open(file, 'r') as f:
-                    json = loads(f.read())
+                    if str(file).endswith('.json'):
+                        raw_data = loads(f.read())
+                    if str(file).endswith('.yml'):
+                        raw_data = yaml.safe_load(f)
 
-                # print(f'--------- json ---------')
-                # print(dumps(json, indent=2, cls=ComplexEncoder))
+                # print(f'--------- raw_data ---------')
+                # print(dumps(raw_data, indent=2, cls=ComplexEncoder))
                 # print('-------------------------')
 
                 if 'pairs' in json:
