@@ -199,11 +199,11 @@ class App():
                     sdata = data['data'].get(symbol)
 
                     if sdata is None or len(sdata) == 0:
-                        print(f'----- data ({symbol}) -----')
+                        print(f'----- data.data ({symbol}) -----')
                         print(dumps(data['data'], indent=2, cls=ComplexEncoder))
                         print('------------------------')
 
-                        raise ValueError('sdata is empty')
+                        raise ValueError(f'sdata is empty: {symbol}')
 
                     try:
                         first = sdata[0]
