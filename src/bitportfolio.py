@@ -94,8 +94,8 @@ class App():
             holding_minimum = self.config['holding_minimum']
             self.holding_minimum_amount = holding_minimum['amount']
             self.holding_minimum_ignore = holding_minimum['ignore']
-        print(f'-> holding minimum: {self.holding_minimum_amount}')
-        print(f'-> holding min ignore: {self.holding_minimum_ignore}')
+        # print(f'-> holding minimum: {self.holding_minimum_amount}')
+        # print(f'-> holding min ignore: {self.holding_minimum_ignore}')
 
     def run(self):
         self.running = True
@@ -141,8 +141,6 @@ class App():
                 portfolio.add_portfolio(sub_portfolio)
 
             elif file.is_file():
-                if not str(file).endswith('.json'):
-                    continue
 
                 raw_data = None
                 with open(file, 'r') as f:
@@ -155,29 +153,40 @@ class App():
                 # print(dumps(raw_data, indent=2, cls=ComplexEncoder))
                 # print('-------------------------')
 
-                if 'pairs' in json:
-                    pairs = json['pairs']
-                if 'ignore' in json:
-                    if json['ignore']:
-                        # print(f'-> ignore: {file}')
+                if 'ignore' in raw_data:
+                    if raw_data['ignore']:
                         continue
 
-                for pair in pairs:
-                    for transaction_j in pair['transactions']:
-                        transaction_o = Transaction(pair=pair['pair'], d=transaction_j)
+                if 'sources' not in raw_data:
+                    raise ValueError(f'No sources-field found in file: {file}')
 
-                        handle_trx = True
+                for source in raw_data['sources']:
+                    if 'pairs' in source:
+                        pairs = source['pairs']
+                    if 'ignore' in source:
+                        if source['ignore']:
+                            continue
 
-                        if self.filter_symbol is not None:
-                            if transaction_o.sell_symbol != self.filter_symbol and transaction_o.buy_symbol != self.filter_symbol and (transaction_o.spot is not None and transaction_o.spot.symbol != self.filter_symbol or transaction_o.spot is None):
-                                handle_trx = False
+                    for pair in pairs:
+                        for transaction_j in pair['transactions']:
+                            transaction_o = Transaction(
+                                source=source['source'],
+                                pair=pair['pair'],
+                                d=transaction_j,
+                            )
 
-                        if self.filter_ttype is not None:
-                            if transaction_o.ttype != self.filter_ttype:
-                                handle_trx = False
+                            handle_trx = True
 
-                        if handle_trx:
-                            portfolio.add_transaction(transaction_o)
+                            if self.filter_symbol is not None:
+                                if transaction_o.sell_symbol != self.filter_symbol and transaction_o.buy_symbol != self.filter_symbol and (transaction_o.spot is not None and transaction_o.spot.symbol != self.filter_symbol or transaction_o.spot is None):
+                                    handle_trx = False
+
+                            if self.filter_ttype is not None:
+                                if transaction_o.ttype != self.filter_ttype:
+                                    handle_trx = False
+
+                            if handle_trx:
+                                portfolio.add_transaction(transaction_o)
 
         return portfolio
 
@@ -312,6 +321,7 @@ class App():
                 'buys': [],
                 'buyq': [],
                 'accu': [],
+                'source': [],
             }
 
             accumulated = 0.0
@@ -332,7 +342,9 @@ class App():
                     transactions['value'].append(transaction.pair.value)
 
                     if transaction.ttype == 'buy':
-                        accumulated += transaction.pair.buy_spot.quantity
+                        # TODO fix
+                        #accumulated += transaction.pair.buy_spot.quantity
+                        #accumulated += transaction.pair.sell_spot.quantity
 
                         transactions['profit'].append(transaction.profit)
                         transactions['sellq'].append(transaction.pair.sell_spot.quantity)
@@ -340,7 +352,9 @@ class App():
                         transactions['buyq'].append(transaction.pair.buy_spot.quantity)
                         transactions['buys'].append(transaction.pair.buy_spot.symbol)
                     elif transaction.ttype == 'sell':
-                        accumulated -= transaction.pair.buy_spot.quantity
+                        # TODO fix
+                        #accumulated -= transaction.pair.sell_spot.quantity
+                        #accumulated -= transaction.pair.buy_spot.quantity
 
                         transactions['profit'].append('---')
                         transactions['sellq'].append(transaction.pair.buy_spot.quantity)
@@ -366,9 +380,8 @@ class App():
                     transactions['buyq'].append('---')
                     transactions['buys'].append('---')
 
-                # if self.filter_symbol is not None:
-                    #accumulated += transaction.ttype
                 transactions['accu'].append(accumulated)
+                transactions['source'].append(transaction.source)
 
             if len(transactions['pair']) > 0:
                 try:
@@ -415,6 +428,8 @@ class App():
 
                 if self.filter_symbol is not None:
                     df_cols.append('accu')
+
+                df_cols.append('source')
 
                 df_s = df.to_string(index=False, columns=df_cols)
                 print()

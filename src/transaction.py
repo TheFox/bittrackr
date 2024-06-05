@@ -3,6 +3,7 @@ from spot import Spot
 from pair import Pair
 
 class Transaction():
+    source: str
     pair_s: str
     symbol: str
     sell_symbol: str|None
@@ -21,7 +22,8 @@ class Transaction():
     profit: float|None
     state: str|None
 
-    def __init__(self, pair: str, d: dict):
+    def __init__(self, source: str, pair: str, d: dict):
+        self.source = source
         self.pair_s = pair
         self.date = None
         self.ttype = None
