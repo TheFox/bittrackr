@@ -342,15 +342,10 @@ class App():
                     transactions['quote'].append(transaction.cprice)
                     transactions['value'].append(transaction.pair.value)
 
-                    print('----')
-                    print(f'-> sell: {transaction.pair.sell_spot.symbol}')
-                    print(f'-> buy: {transaction.pair.buy_spot.symbol}')
-
                     if transaction.ttype == 'buy':
 
                         if self.filter_symbol is not None:
                             if self.filter_symbol == transaction.pair.buy_spot.symbol:
-                                print('-> buy accu')
                                 accumulated += transaction.pair.buy_spot.quantity
 
                         transactions['profit'].append(transaction.profit)
@@ -362,7 +357,6 @@ class App():
 
                         if self.filter_symbol is not None:
                             if self.filter_symbol == transaction.pair.buy_spot.symbol:
-                                print('-> sell accu')
                                 accumulated -= transaction.pair.buy_spot.quantity
 
                         transactions['profit'].append('---')
