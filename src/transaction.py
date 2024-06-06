@@ -21,6 +21,7 @@ class Transaction():
     spot: Spot|None
     profit: float|None
     state: str|None
+    ignore: bool|None
 
     def __init__(self, source: str, pair: str, d: dict):
         self.source = source
@@ -37,6 +38,7 @@ class Transaction():
         self.spot = None
         self.profit = None
         self.state = None
+        self.ignore = None
 
         if '/' in self.pair_s:
             self.is_pair = True

@@ -175,6 +175,9 @@ class App():
                                 d=transaction_j,
                             )
 
+                            if transaction_o.ignore:
+                                continue
+
                             handle_trx = True
 
                             if self.filter_symbol is not None:
