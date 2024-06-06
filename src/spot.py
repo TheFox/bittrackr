@@ -47,9 +47,11 @@ class Spot():
         self.quantity -= spot.quantity
 
 
+from transaction import Transaction
+
 class Holding(Spot):
     quote: float
-    transactions: list
+    transactions: list['Transaction']
 
     def __init__(self, s: str, q: float = 0.0):
         super().__init__(s, q)

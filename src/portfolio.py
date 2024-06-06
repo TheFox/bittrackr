@@ -219,12 +219,35 @@ class Portfolio():
                 transaction.cprice = quotes.get(convert, pair.buy_spot.symbol)
 
                 if pair.sell_spot.symbol == convert:
+
                     cquote = quotes.get(convert, pair.buy_spot.symbol)
-                    pair.value = cquote * pair.buy_spot.quantity
-                    pair.profit = pair.value - pair.sell_spot.quantity
+
+                    print('------------------')
+                    print(f'-> pair.profit ttype: {transaction.ttype}')
+                    print(f'-> pair.profit cquote: {cquote}')
+                    print(f'-> pair.profit sell_spot.quantity: {pair.sell_spot.quantity}')
+                    print(f'-> pair.profit buy_spot.quantity: {pair.buy_spot.quantity}')
+
+                    if transaction.ttype == 'buy':
+
+                        pair.value = cquote * pair.buy_spot.quantity
+                        pair.profit = pair.value - pair.sell_spot.quantity
+
+                        print(f'-> pair.profit pair.value: {pair.value}')
+                        print(f'-> pair.profit pair.profit: {pair.profit} (= {pair.value}(pair.value) - {pair.sell_spot.quantity}(sell_spot.quantity))')
+
+                    elif transaction.ttype == 'sell':
+
+                        pair.value = cquote * pair.buy_spot.quantity
+                        pair.profit = pair.buy_spot.quantity - pair.value
+
+                        print(f'-> pair.profit pair.value: {pair.value}')
+                        print(f'-> pair.profit pair.profit: {pair.profit} (= {pair.buy_spot.quantity}(pair.buy_spot.quantity) - {pair.value}(pair.value))')
+
+
 
                 elif pair.buy_spot.symbol == convert:
-                    raise NotImplementedError()
+                    raise NotImplementedError(f'pair.buy_spot.symbol({pair.buy_spot.symbol}) == convert({convert})')
                 else:
                     squote = quotes.get(convert, pair.sell_spot.symbol)
                     bquote = quotes.get(convert, pair.buy_spot.symbol)
@@ -251,6 +274,7 @@ class Portfolio():
                 else:
                     raise ValueError(f'Unknown Transaction type: {transaction.ttype}')
 
+                print(f'-> spot.profit: {spot.profit}')
                 transaction.profit = spot.profit
 
         # Holdings
@@ -265,9 +289,12 @@ class Portfolio():
             holding.quote = quote
             holding.value = quote * holding.quantity
 
+            print('----------')
             holding.profit = 0.0
             for transaction in holding.transactions:
-                holding.profit += transaction.profit
+                print(f'-> holding.profit: {holding.profit} {transaction.profit} {transaction.ttype}')
+                if transaction.profit is not None:
+                    holding.profit += transaction.profit
 
         # Fees
         for fee_id, fee in self.fees.items():

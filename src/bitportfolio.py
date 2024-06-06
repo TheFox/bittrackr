@@ -121,6 +121,7 @@ class App():
                     dump(quotes.to_json(), f, indent=2)
 
         portfolio.quotes(quotes, self.config['convert'])
+        print('------------------')
         self._print_portfolio(portfolio)
 
     def shutdown(self, reason: str):
@@ -341,6 +342,7 @@ class App():
                     transactions['price'].append(transaction.price)
                     transactions['quote'].append(transaction.cprice)
                     transactions['value'].append(transaction.pair.value)
+                    transactions['profit'].append(transaction.profit)
 
                     if transaction.ttype == 'buy':
 
@@ -348,7 +350,6 @@ class App():
                             if self.filter_symbol == transaction.pair.buy_spot.symbol:
                                 accumulated += transaction.pair.buy_spot.quantity
 
-                        transactions['profit'].append(transaction.profit)
                         transactions['sellq'].append(transaction.pair.sell_spot.quantity)
                         transactions['sells'].append(transaction.pair.sell_spot.symbol)
                         transactions['buyq'].append(transaction.pair.buy_spot.quantity)
@@ -359,7 +360,6 @@ class App():
                             if self.filter_symbol == transaction.pair.buy_spot.symbol:
                                 accumulated -= transaction.pair.buy_spot.quantity
 
-                        transactions['profit'].append('---')
                         transactions['sellq'].append(transaction.pair.buy_spot.quantity)
                         transactions['sells'].append(transaction.pair.buy_spot.symbol)
                         transactions['buyq'].append(transaction.pair.sell_spot.quantity)

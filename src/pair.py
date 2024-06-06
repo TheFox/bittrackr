@@ -20,7 +20,7 @@ class Pair():
         self.profit = None
 
     def __repr__(self):
-        return f'Pair[s={self.sell_spot},b={self.buy_spot},t={len(self.transactions)}]'
+        return f'Pair[s={self.sell_spot},b={self.buy_spot},t={len(self.transactions)},p={self.profit}]'
 
     def to_json(self):
         return {
