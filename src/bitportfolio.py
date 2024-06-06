@@ -94,8 +94,6 @@ class App():
             holding_minimum = self.config['holding_minimum']
             self.holding_minimum_amount = holding_minimum['amount']
             self.holding_minimum_ignore = holding_minimum['ignore']
-        # print(f'-> holding minimum: {self.holding_minimum_amount}')
-        # print(f'-> holding min ignore: {self.holding_minimum_ignore}')
 
     def run(self):
         self.running = True
@@ -344,10 +342,16 @@ class App():
                     transactions['quote'].append(transaction.cprice)
                     transactions['value'].append(transaction.pair.value)
 
+                    print('----')
+                    print(f'-> sell: {transaction.pair.sell_spot.symbol}')
+                    print(f'-> buy: {transaction.pair.buy_spot.symbol}')
+
                     if transaction.ttype == 'buy':
-                        # TODO fix
-                        #accumulated += transaction.pair.buy_spot.quantity
-                        #accumulated += transaction.pair.sell_spot.quantity
+
+                        if self.filter_symbol is not None:
+                            if self.filter_symbol == transaction.pair.buy_spot.symbol:
+                                print('-> buy accu')
+                                accumulated += transaction.pair.buy_spot.quantity
 
                         transactions['profit'].append(transaction.profit)
                         transactions['sellq'].append(transaction.pair.sell_spot.quantity)
@@ -355,9 +359,11 @@ class App():
                         transactions['buyq'].append(transaction.pair.buy_spot.quantity)
                         transactions['buys'].append(transaction.pair.buy_spot.symbol)
                     elif transaction.ttype == 'sell':
-                        # TODO fix
-                        #accumulated -= transaction.pair.sell_spot.quantity
-                        #accumulated -= transaction.pair.buy_spot.quantity
+
+                        if self.filter_symbol is not None:
+                            if self.filter_symbol == transaction.pair.buy_spot.symbol:
+                                print('-> sell accu')
+                                accumulated -= transaction.pair.buy_spot.quantity
 
                         transactions['profit'].append('---')
                         transactions['sellq'].append(transaction.pair.buy_spot.quantity)
