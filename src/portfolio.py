@@ -238,19 +238,18 @@ class Portfolio():
 
                         print(f'-> profit B: {pair.profit}(profit) = {pair.sell_spot.quantity}(sell_spot.quantity) - {pair.value}(value)')
 
-                    transaction.profit = pair.profit
-
                 elif pair.buy_spot.symbol == convert:
+                    raise NotImplementedError()
                     if transaction.ttype == 'buy':
                         pair.value = cquote * pair.buy_spot.quantity
-                        pair.profit = pair.buy_spot.quantity - pair.value
+                        pair.profit = pair.sell_spot.quantity - pair.value
 
                     elif transaction.ttype == 'sell':
                         pair.value = cquote * pair.buy_spot.quantity
                         pair.profit = pair.value - pair.sell_spot.quantity
 
                 else:
-                    raise NotImplemented()
+                    raise NotImplementedError()
                     x_quote = quotes.get(pair.sell_spot.symbol, pair.buy_spot.symbol)
                     sell_quote = quotes.get(convert, pair.sell_spot.symbol)
                     buy_quote = quotes.get(convert, pair.buy_spot.symbol)
@@ -267,8 +266,7 @@ class Portfolio():
 
                     # pair.value = buy_value
 
-                #transaction.profit = pair.profit
-                #transaction.profit = 'TODO'
+                transaction.profit = pair.profit
 
             else:
                 spot = transaction.spot
@@ -284,9 +282,10 @@ class Portfolio():
                 else:
                     raise ValueError(f'Unknown Transaction type: {transaction.ttype}')
 
-                #print(f'-> spot.profit: {spot.profit}')
+                raise NotImplementedError('not pair')
+                print(f'-> spot.profit: {spot.profit}')
                 #transaction.profit = spot.profit
-                transaction.profit = 'not pair'
+                #transaction.profit = 'not pair'
 
         # Holdings
         for hsym, holding in self.holdings.items():
@@ -303,10 +302,25 @@ class Portfolio():
             print('----------')
             holding.profit = 0.0
             for transaction in holding.transactions:
-                print(f'-> holding: hp={holding.profit} tp={transaction.profit} tt={transaction.ttype}')
-                if transaction.profit is not None:
-                    pass
-                    #holding.profit += transaction.profit
+                profit = 0.0
+
+                if transaction.ttype == 'buy':
+                    if transaction.profit is not None:
+                        profit = transaction.profit
+                        print(f'-> transaction.profit: {transaction.profit}')
+
+                elif transaction.ttype == 'sell':
+                    print(f'-> pair: {transaction.pair}')
+
+                    if pair.sell_spot.symbol == convert:
+                        profit = -pair.sell_spot.quantity
+
+                    elif pair.buy_spot.symbol == convert:
+                        raise NotImplementedError('pair.buy_spot.symbol == convert')
+
+                holding.profit += profit
+
+                print(f'-> holding: hp={holding.profit} tt={transaction.ttype} profit={profit}')
 
         # Fees
         for fee_id, fee in self.fees.items():
