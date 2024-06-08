@@ -14,25 +14,8 @@ from portfolio import Portfolio
 from transaction import Transaction
 from apptypes import ConvertSymbols
 from json_helper import ComplexEncoder
-from portfolio import Holding
 from quotes import Quotes
-
-def _sort_holdings(item: tuple[str, Holding]):
-    value = item[1].value
-    if value is None:
-        return 0.0
-    return value
-
-def _format_profit(val):
-    print(f'-> _format_profit: {val}')
-    if val < 0.0:
-        return f'{fg.red}{val:.5f}{rs.all}'
-    return f'{val:.5f}'
-
-def _color_negative_red(val):
-    print(f'-> _color_negative_red: {val}')
-    color = 'red' if val < 0 else 'black'
-    return 'color: %s' % color
+from helper import sort_holdings
 
 class App():
     show_transactions: bool
@@ -245,7 +228,7 @@ class App():
             'profit': [],
             'trx': [],
         }
-        sorted_holdings = sorted(portfolio.holdings.items(), key=_sort_holdings, reverse=True)
+        sorted_holdings = sorted(portfolio.holdings.items(), key=sort_holdings, reverse=True)
         total_value = 0.0
         for hsym, holding in sorted_holdings:
             if holding.symbol == self.config['convert']:
