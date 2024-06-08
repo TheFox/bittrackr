@@ -218,53 +218,61 @@ class Portfolio():
 
                 transaction.cprice = quotes.get(convert, pair.buy_spot.symbol)
 
-                cquote = quotes.get(convert, pair.buy_spot.symbol)
-
                 print()
                 print(f'-> transaction type: {transaction.ttype}')
-                print(f'-> cquote: {cquote} ({pair.buy_spot.symbol})')
 
                 if pair.sell_spot.symbol == convert:
+                    cquote = quotes.get(convert, pair.buy_spot.symbol)
+                    print(f'-> cquote: {cquote} ({pair.buy_spot.symbol})')
+
                     pair.value = cquote * pair.buy_spot.quantity
-                    print(f'-> {pair.value}(value) = {cquote}(cquote) * {pair.buy_spot.quantity}(buy_spot.quantity)')
+                    print(f'-> A {pair.value}(value) = {cquote}(cquote) * {pair.buy_spot.quantity}(buy_spot.quantity)')
 
                     if transaction.ttype == 'buy':
                         pair.profit = pair.value - pair.sell_spot.quantity
-
                         print(f'-> profit A: {pair.profit}(profit) = {pair.value}(value) - {pair.sell_spot.quantity}(sell_spot.quantity)')
 
                     elif transaction.ttype == 'sell':
                         pair.profit = pair.sell_spot.quantity - pair.value
-
                         print(f'-> profit B: {pair.profit}(profit) = {pair.sell_spot.quantity}(sell_spot.quantity) - {pair.value}(value)')
 
                 elif pair.buy_spot.symbol == convert:
                     raise NotImplementedError()
-                    if transaction.ttype == 'buy':
-                        pair.value = cquote * pair.buy_spot.quantity
-                        pair.profit = pair.sell_spot.quantity - pair.value
-
-                    elif transaction.ttype == 'sell':
-                        pair.value = cquote * pair.buy_spot.quantity
-                        pair.profit = pair.value - pair.sell_spot.quantity
 
                 else:
-                    raise NotImplementedError()
-                    x_quote = quotes.get(pair.sell_spot.symbol, pair.buy_spot.symbol)
-                    sell_quote = quotes.get(convert, pair.sell_spot.symbol)
-                    buy_quote = quotes.get(convert, pair.buy_spot.symbol)
 
-                    print(f'-> x_quote: {x_quote}')
+
+                    sell_quote = quotes.get(convert, pair.sell_spot.symbol)
                     print(f'-> sell_quote: {sell_quote}')
+                    buy_quote = quotes.get(convert, pair.buy_spot.symbol)
                     print(f'-> buy_quote: {buy_quote}')
 
-                    # sell_value = sell_quote * pair.sell_spot.quantity
-                    # buy_value = buy_quote * pair.buy_spot.quantity
-                    # pair.profit = buy_value - sell_value
+                    sell_value = sell_quote * pair.sell_spot.quantity
+                    print(f'-> {sell_value}(sell_value) = {sell_quote}(sell_quote) * {pair.sell_spot.quantity}(pair.sell_spot.quantity)')
 
-                    # print(f'-> profit C: {pair.profit} = {buy_value}(buy_value) - {sell_value}(sell_value)')
+                    buy_value = buy_quote * pair.buy_spot.quantity
+                    print(f'-> {buy_value}(buy_value) = {buy_quote}(buy_quote) * {pair.buy_spot.quantity}(pair.buy_spot.quantity)')
 
-                    # pair.value = buy_value
+                    pair.profit = buy_value - sell_value
+                    print(f'-> profit C: {pair.profit} = {buy_value}(buy_value) - {sell_value}(sell_value)')
+
+                    pair.value = buy_value
+
+
+                    # x_quote = quotes.get(pair.sell_spot.symbol, pair.buy_spot.symbol)
+                    # print(f'-> x_quote: {x_quote}')
+
+                    # pair.value = x_quote * pair.buy_spot.quantity
+                    # print(f'-> C {pair.value}(value) = {x_quote}(x_quote) * {pair.buy_spot.quantity}(buy_spot.quantity)')
+
+                    # if transaction.ttype == 'buy':
+                    #     pair.profit = pair.value - pair.sell_spot.quantity
+                    #     print(f'-> profit E: {pair.profit}(profit) = {pair.value}(value) - {pair.sell_spot.quantity}(sell_spot.quantity)')
+
+                    # elif transaction.ttype == 'sell':
+                    #     pair.profit = pair.sell_spot.quantity - pair.value
+
+                    #     print(f'-> profit F: {pair.profit}(profit) = {pair.sell_spot.quantity}(sell_spot.quantity) - {pair.value}(value)')
 
                 transaction.profit = pair.profit
 
@@ -282,9 +290,9 @@ class Portfolio():
                 else:
                     raise ValueError(f'Unknown Transaction type: {transaction.ttype}')
 
-                raise NotImplementedError('not pair')
-                print(f'-> spot.profit: {spot.profit}')
-                #transaction.profit = spot.profit
+                #raise NotImplementedError('not pair')
+                #print(f'-> spot.profit: {spot.profit}')
+                transaction.profit = spot.profit
                 #transaction.profit = 'not pair'
 
         # Holdings
@@ -294,33 +302,47 @@ class Portfolio():
                 self.costs.quantity = holding.quantity * -1
                 continue
 
+            print('--------------')
+            print(f'-> holding={holding.symbol}')
+
             quote = quotes.get(convert, holding.symbol)
 
             holding.quote = quote
             holding.value = quote * holding.quantity
 
-            print('----------')
+
             holding.profit = 0.0
             for transaction in holding.transactions:
+
+                print(f'    -> transaction: {transaction.date} {transaction.ttype} {transaction.pair_s} holding={holding.symbol}')
+                # if transaction.sell_symbol == holding.symbol:
+                #     print('-> skip')
+                #     continue
+
                 profit = 0.0
 
-                if transaction.ttype == 'buy':
-                    if transaction.profit is not None:
-                        profit = transaction.profit
-                        print(f'-> transaction.profit: {transaction.profit}')
+                if transaction.buy_symbol == holding.symbol:
 
-                elif transaction.ttype == 'sell':
-                    print(f'-> pair: {transaction.pair}')
+                    if transaction.ttype == 'buy':
+                        if transaction.profit is not None:
+                            profit = transaction.profit
+                            print(f'    -> transaction.profit: {transaction.profit}')
 
-                    if pair.sell_spot.symbol == convert:
-                        profit = -pair.sell_spot.quantity
+                    elif transaction.ttype == 'sell':
+                        print(f'    -> pair: {transaction.pair}')
 
-                    elif pair.buy_spot.symbol == convert:
-                        raise NotImplementedError('pair.buy_spot.symbol == convert')
+                        if pair.sell_spot.symbol == convert:
+                            profit = -pair.sell_spot.quantity
+
+                        elif pair.buy_spot.symbol == convert:
+                            raise NotImplementedError('pair.buy_spot.symbol == convert')
+                else:
+                    print(f'    -> skip: {transaction.buy_symbol}(transaction.buy_symbol) != {holding.symbol}(holding.symbol)')
 
                 holding.profit += profit
 
-                print(f'-> holding: hp={holding.profit} tt={transaction.ttype} profit={profit}')
+                print(f'    -> holding({holding.symbol}): hp={holding.profit} tt={transaction.ttype} profit={profit}')
+            print()
 
         # Fees
         for fee_id, fee in self.fees.items():
