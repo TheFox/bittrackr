@@ -16,7 +16,8 @@
                             "quantity": 30,
                             "fee": [1.99, "EUR"],
                             "note": "H4ck the W0rld",
-                            "state": "open"
+                            "state": "open",
+                            "close_date": null
                         }
                     ]
                 }
