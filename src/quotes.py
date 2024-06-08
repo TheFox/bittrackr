@@ -20,10 +20,13 @@ class Quotes():
         self.symbols[convert][symbol] = val
 
     def get(self, convert: str, symbol: str) -> float:
+        if convert == symbol:
+            return 1.0
+
         if convert not in self.symbols:
             raise ValueError(f'convert not found in quotes: {convert}')
 
         if symbol not in self.symbols[convert]:
-            raise ValueError(f'symbol not found in quotes: {symbol}')
+            raise ValueError(f'symbol not found in quotes: convert={convert} symbol={symbol}')
 
         return self.symbols[convert][symbol]
