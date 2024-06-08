@@ -213,6 +213,11 @@ class Portfolio():
         for sub_portfolio in self.subs:
             sub_portfolio.quotes(quotes, convert)
 
+        self._quotes_transactions(quotes, convert)
+        self._quotes_holdings(quotes, convert)
+        self._quotes_fees(quotes, convert)
+
+    def _quotes_transactions(self, quotes: Quotes, convert: str):
         transactions = cast(list[Transaction], sorted(self.transactions, key=sort_transactions))
         for transaction in transactions:
 
@@ -293,6 +298,7 @@ class Portfolio():
             else:
                 spot = transaction.spot
                 quote = quotes.get(convert, spot.symbol)
+
                 spot.value = quote * spot.quantity
                 spot.profit = spot.value
                 spot.price = quote
@@ -309,6 +315,7 @@ class Portfolio():
                 transaction.profit = spot.profit
                 #transaction.profit = 'not pair'
 
+    def _quotes_holdings(self, quotes: Quotes, convert: str):
         # Holdings
         for hsym, holding in self.holdings.items():
             if holding.symbol == convert:
@@ -328,28 +335,46 @@ class Portfolio():
             sorted_holdings = cast(list[Transaction], sorted(holding.transactions, key=sort_transactions))
             for transaction in sorted_holdings:
 
-                pair = transaction.pair
+                print()
+                print(f'    -> transaction: {transaction.date} {transaction.ttype} {transaction.pair_s}')
+                print(f'      -> price: {transaction.price}')
+                print(f'      -> quantity: {transaction.quantity}')
+                print(f'      -> profit: {transaction.profit}')
 
-                print(f'    -> transaction: {transaction.date} {transaction.ttype} {transaction.pair_s} holding={holding.symbol}')
 
                 profit = 0.0
 
                 if transaction.is_pair:
 
-                    if transaction.buy_symbol == holding.symbol:
+                    print(f'      -> sell_spot: {transaction.pair.sell_spot}')
+                    print(f'      -> buy_spot: {transaction.pair.buy_spot}')
+
+                    if holding.symbol == transaction.buy_symbol:
                         print(f'      -> {transaction.buy_symbol}(transaction.buy_symbol) == {holding.symbol}(holding.symbol)')
-                    elif transaction.sell_symbol == holding.symbol:
+
+                    elif holding.symbol == transaction.sell_symbol:
                         print(f'      -> {transaction.sell_symbol}(transaction.sell_symbol) == {holding.symbol}(holding.symbol)')
-                    else:
-                        print(f'      -> skip')
-                        print(f'               {transaction.buy_symbol}(transaction.buy_symbol) != {holding.symbol}(holding.symbol)')
-                        print(f'               {transaction.sell_symbol}(transaction.sell_symbol) != {holding.symbol}(holding.symbol)')
+
+                else:
+                    print(f'      -> spot: {transaction.spot}')
+                    profit = transaction.spot.profit
+
+                    #if holding.symbol == transaction.spot.symbol:
+                    #if holding.symbol == transaction.spot.symbol:
+
+                    # if transaction.ttype == 'in':
+                    #     profit = spot.profit
+                    # elif transaction.ttype == 'in':
+                    #     profit = -spot.profit
+
+
 
                 holding.profit += profit
 
-                print(f'      -> holding({holding.symbol}): hp={holding.profit} tt={transaction.ttype} profit={profit}')
+                print(f'      -> holding({holding.symbol}): profit={profit}    hp={holding.profit}')
             print() # TODO remove
 
+    def _quotes_fees(self, quotes: Quotes, convert: str):
         # Fees
         for fee_id, fee in self.fees.items():
 
