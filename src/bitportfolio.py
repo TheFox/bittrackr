@@ -354,6 +354,7 @@ class App():
                         transactions['sells'].append(transaction.pair.sell_spot.symbol)
                         transactions['buyq'].append(transaction.pair.buy_spot.quantity)
                         transactions['buys'].append(transaction.pair.buy_spot.symbol)
+
                     elif transaction.ttype == 'sell':
 
                         if self.filter_symbol is not None:
@@ -364,6 +365,7 @@ class App():
                         transactions['sells'].append(transaction.pair.buy_spot.symbol)
                         transactions['buyq'].append(transaction.pair.sell_spot.quantity)
                         transactions['buys'].append(transaction.pair.sell_spot.symbol)
+
                     else:
                         raise ValueError(f'Unknown Transaction type: {transaction.ttype}')
                 else:
