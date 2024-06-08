@@ -253,8 +253,13 @@ class Portfolio():
                     buy_value = buy_quote * pair.buy_spot.quantity
                     print(f'-> {buy_value}(buy_value) = {buy_quote}(buy_quote) * {pair.buy_spot.quantity}(pair.buy_spot.quantity)')
 
-                    pair.profit = buy_value - sell_value
-                    print(f'-> profit C: {pair.profit} = {buy_value}(buy_value) - {sell_value}(sell_value)')
+                    if transaction.ttype == 'buy':
+                        pair.profit = buy_value - sell_value
+                        print(f'-> profit Ca: {pair.profit} = {buy_value}(buy_value) - {sell_value}(sell_value)')
+
+                    elif transaction.ttype == 'sell':
+                        pair.profit = sell_value - buy_value
+                        print(f'-> profit Cb: {pair.profit} = {sell_value}(sell_value) - {buy_value}(buy_value)')
 
                     pair.value = buy_value
 
@@ -315,21 +320,20 @@ class Portfolio():
             for transaction in holding.transactions:
 
                 print(f'    -> transaction: {transaction.date} {transaction.ttype} {transaction.pair_s} holding={holding.symbol}')
-                # if transaction.sell_symbol == holding.symbol:
-                #     print('-> skip')
-                #     continue
 
                 profit = 0.0
 
                 if transaction.buy_symbol == holding.symbol:
 
                     if transaction.ttype == 'buy':
+                        print(f'    -> buy')
                         if transaction.profit is not None:
                             profit = transaction.profit
                             print(f'    -> transaction.profit: {transaction.profit}')
 
                     elif transaction.ttype == 'sell':
-                        print(f'    -> pair: {transaction.pair}')
+                        print(f'    -> sell')
+                        print(f'    -> sell_spot: {pair.sell_spot.symbol}')
 
                         if pair.sell_spot.symbol == convert:
                             profit = -pair.sell_spot.quantity
