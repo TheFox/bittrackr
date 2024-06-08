@@ -349,22 +349,27 @@ class Portfolio():
                     print(f'      -> sell_spot: {transaction.pair.sell_spot}')
                     print(f'      ->  buy_spot: {transaction.pair.buy_spot}')
 
+                    profit = transaction.profit
 
                     if holding.symbol == transaction.sell_symbol:
                         print(f'      -> holding is transaction.sell_symbol')
 
                         if transaction.ttype == 'buy':
-                            profit = -transaction.pair.sell_spot.value
+                            #profit = -transaction.pair.sell_spot.value
+                            pass
                         elif transaction.ttype == 'sell':
-                            profit = transaction.pair.sell_spot.value
+                            #profit = transaction.pair.sell_spot.value
+                            pass
 
                     elif holding.symbol == transaction.buy_symbol:
                         print(f'      -> holding is transaction.buy_symbol')
 
                         if transaction.ttype == 'buy':
-                            profit = transaction.pair.buy_spot.value
+                            #profit = transaction.pair.buy_spot.value
+                            pass
                         elif transaction.ttype == 'sell':
-                            profit = -transaction.pair.buy_spot.value
+                            #profit = -transaction.pair.buy_spot.value
+                            pass
 
 
 
