@@ -3,6 +3,7 @@ sources:
 - ignore: false
   pairs:
   - pair: EUR/BTC
+    ignore: true
     transactions:
     - date: '2018-12-31'
       fee:

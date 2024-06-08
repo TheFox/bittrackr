@@ -161,6 +161,9 @@ class App():
                             continue
 
                     for pair in pairs:
+                        if 'ignore' in pair and pair['ignore']:
+                            continue
+
                         for transaction_j in pair['transactions']:
                             transaction_o = Transaction(
                                 source=source['source'],
