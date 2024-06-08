@@ -4,6 +4,7 @@ import yaml
 import signal
 import shutil
 import pandas as pd
+from logging import getLogger, basicConfig
 from typing import cast
 from argparse import ArgumentParser, BooleanOptionalAction
 from json import loads, load, dumps, dump
@@ -17,6 +18,8 @@ from json_helper import ComplexEncoder
 from quotes import Quotes
 from helper import sort_holdings
 
+_logger = getLogger(f'app.{__name__}')
+
 class App():
     show_transactions: bool
     data_provider_id: str|None
@@ -24,6 +27,7 @@ class App():
     running: bool
 
     def __init__(self,
+                 log_level: str = 'INFO',
                  base_dir: str|None = None,
                  config_path: str|None = None,
                  show_transactions: bool = False,
@@ -35,6 +39,13 @@ class App():
                  filter_ttype: bool|None = None,
                  load: bool|None = None,
                  save: bool|None = None):
+
+        logConfig = {
+            'level': log_level,
+            'format': '%(asctime)s %(process)d %(levelname)s %(name)s %(message)s',
+        }
+        basicConfig(**logConfig)
+
         self.terminal = shutil.get_terminal_size((80, 20))
 
         self.running = False
@@ -439,6 +450,7 @@ def main():
     pd.set_option('display.max_rows', None)
 
     parser = ArgumentParser(prog='bitportfolio', description='BitPortfolio')
+    parser.add_argument('--log-level', type=str, nargs='?', required=False, help='Log Level', default='WARN')
     parser.add_argument('-c', '--config', type=str, nargs='?', required=False, help='Path to Config File')
     parser.add_argument('-d', '--basedir', type=str, nargs='?', required=False, help='Path to directory')
     parser.add_argument('-p', '--dataprovider', type=str, nargs='?', required=False, help='ID', default='cmc')
@@ -462,6 +474,7 @@ def main():
         filter_ttype = 'sell'
 
     app = App(
+        log_level=args.log_level,
         base_dir=args.basedir,
         config_path=args.config,
         show_transactions=args.transactions,

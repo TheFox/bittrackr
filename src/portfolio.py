@@ -1,4 +1,5 @@
 
+from logging import getLogger
 from typing import cast
 from apptypes import ConvertSymbols
 from json_helper import ComplexEncoder
@@ -8,6 +9,8 @@ from pair import Pair
 from transaction import Transaction
 from quotes import Quotes
 from helper import sort_holdings, sort_transactions
+
+_logger = getLogger(f'app.{__name__}')
 
 class Portfolio():
     parent: 'Portfolio'
@@ -226,72 +229,55 @@ class Portfolio():
 
                 transaction.cprice = quotes.get(convert, pair.buy_spot.symbol)
 
-                print()
-                print(f'-> transaction: {transaction.ttype} {transaction.date}')
+                _logger.debug(f'transaction: {transaction.ttype} {transaction.date}')
 
                 if pair.sell_spot.symbol == convert:
                     cquote = quotes.get(convert, pair.buy_spot.symbol)
-                    print(f'    -> cquote: {cquote} ({pair.buy_spot.symbol})')
+                    _logger.debug(f'cquote: {cquote} ({pair.buy_spot.symbol})')
 
                     pair.value = cquote * pair.buy_spot.quantity
-                    print(f'    -> A {pair.value}(value) = {cquote}(cquote) * {pair.buy_spot.quantity}(buy_spot.quantity)')
+                    _logger.debug(f'A {pair.value}(value) = {cquote}(cquote) * {pair.buy_spot.quantity}(buy_spot.quantity)')
 
                     if transaction.ttype == 'buy':
                         pair.profit = pair.value - pair.sell_spot.quantity
-                        print(f'    -> profit A: {pair.profit}(profit) = {pair.value}(value) - {pair.sell_spot.quantity}(sell_spot.quantity)')
+                        _logger.debug(f'profit A: {pair.profit}(profit) = {pair.value}(value) - {pair.sell_spot.quantity}(sell_spot.quantity)')
 
                     elif transaction.ttype == 'sell':
                         pair.profit = pair.sell_spot.quantity - pair.value
-                        print(f'    -> profit B: {pair.profit}(profit) = {pair.sell_spot.quantity}(sell_spot.quantity) - {pair.value}(value)')
+                        _logger.debug(f'profit B: {pair.profit}(profit) = {pair.sell_spot.quantity}(sell_spot.quantity) - {pair.value}(value)')
 
                 elif pair.buy_spot.symbol == convert:
                     raise NotImplementedError()
 
                 else:
 
-
                     sell_quote = quotes.get(convert, pair.sell_spot.symbol)
-                    print(f'    -> sell_quote: {sell_quote}')
+                    _logger.debug(f'sell_quote: {sell_quote}')
                     buy_quote = quotes.get(convert, pair.buy_spot.symbol)
-                    print(f'    -> buy_quote: {buy_quote}')
+                    _logger.debug(f'buy_quote: {buy_quote}')
 
                     sell_value = sell_quote * pair.sell_spot.quantity
                     pair.sell_spot.value = sell_value
-                    print(f'    -> {sell_value}(sell_value) = {sell_quote}(sell_quote) * {pair.sell_spot.quantity}(pair.sell_spot.quantity)')
+                    _logger.debug(f'{sell_value}(sell_value) = {sell_quote}(sell_quote) * {pair.sell_spot.quantity}(pair.sell_spot.quantity)')
 
                     buy_value = buy_quote * pair.buy_spot.quantity
                     pair.buy_spot.value = buy_value
-                    print(f'    -> {buy_value}(buy_value) = {buy_quote}(buy_quote) * {pair.buy_spot.quantity}(pair.buy_spot.quantity)')
+                    _logger.debug(f'{buy_value}(buy_value) = {buy_quote}(buy_quote) * {pair.buy_spot.quantity}(pair.buy_spot.quantity)')
 
                     if transaction.ttype == 'buy':
                         pair.profit = buy_value - sell_value
-                        print(f'    -> profit Ca: {pair.profit} = {buy_value}(buy_value) - {sell_value}(sell_value)')
+                        _logger.debug(f'profit Ca: {pair.profit} = {buy_value}(buy_value) - {sell_value}(sell_value)')
 
                     elif transaction.ttype == 'sell':
                         pair.profit = sell_value - buy_value
-                        print(f'    -> profit Cb: {pair.profit} = {sell_value}(sell_value) - {buy_value}(buy_value)')
+                        _logger.debug(f'profit Cb: {pair.profit} = {sell_value}(sell_value) - {buy_value}(buy_value)')
 
                     pair.value = buy_value
 
                     # print(f'    -> pair: {pair}')
-                    print(f'    -> pair.sell_spot: {pair.sell_spot}')
-                    print(f'    -> pair.buy_spot: {pair.buy_spot}')
+                    _logger.debug(f'pair.sell_spot: {pair.sell_spot}')
+                    _logger.debug(f'pair.buy_spot: {pair.buy_spot}')
 
-
-                    # x_quote = quotes.get(pair.sell_spot.symbol, pair.buy_spot.symbol)
-                    # print(f'    -> x_quote: {x_quote}')
-
-                    # pair.value = x_quote * pair.buy_spot.quantity
-                    # print(f'    -> C {pair.value}(value) = {x_quote}(x_quote) * {pair.buy_spot.quantity}(buy_spot.quantity)')
-
-                    # if transaction.ttype == 'buy':
-                    #     pair.profit = pair.value - pair.sell_spot.quantity
-                    #     print(f'    -> profit E: {pair.profit}(profit) = {pair.value}(value) - {pair.sell_spot.quantity}(sell_spot.quantity)')
-
-                    # elif transaction.ttype == 'sell':
-                    #     pair.profit = pair.sell_spot.quantity - pair.value
-
-                    #     print(f'    -> profit F: {pair.profit}(profit) = {pair.sell_spot.quantity}(sell_spot.quantity) - {pair.value}(value)')
 
                 transaction.profit = pair.profit
 
@@ -323,8 +309,8 @@ class Portfolio():
                 self.costs.quantity = holding.quantity * -1
                 continue
 
-            print('--------------')
-            print(f'-> holding={holding.symbol}')
+            _logger.debug('--------------')
+            _logger.debug(f'holding={holding.symbol}')
 
             quote = quotes.get(convert, holding.symbol)
 
@@ -335,24 +321,23 @@ class Portfolio():
             sorted_holdings = cast(list[Transaction], sorted(holding.transactions, key=sort_transactions))
             for transaction in sorted_holdings:
 
-                print()
-                print(f'    -> transaction: {transaction.date} {transaction.ttype} {transaction.pair_s}')
-                print(f'      -> price: {transaction.price}')
-                print(f'      -> quantity: {transaction.quantity}')
-                print(f'      -> profit: {transaction.profit}')
+                _logger.debug(f'transaction: {transaction.date} {transaction.ttype} {transaction.pair_s}')
+                _logger.debug(f' |  price: {transaction.price}')
+                _logger.debug(f' |  quantity: {transaction.quantity}')
+                _logger.debug(f' |  profit: {transaction.profit}')
 
 
                 profit = 0.0
 
                 if transaction.is_pair:
 
-                    print(f'      -> sell_spot: {transaction.pair.sell_spot}')
-                    print(f'      ->  buy_spot: {transaction.pair.buy_spot}')
+                    _logger.debug(f' |  sell_spot: {transaction.pair.sell_spot}')
+                    _logger.debug(f' |   buy_spot: {transaction.pair.buy_spot}')
 
                     profit = transaction.profit
 
                     if holding.symbol == transaction.sell_symbol:
-                        print(f'      -> holding is transaction.sell_symbol')
+                        _logger.debug(f' |  holding is transaction.sell_symbol')
 
                         if transaction.ttype == 'buy':
                             #profit = -transaction.pair.sell_spot.value
@@ -362,7 +347,7 @@ class Portfolio():
                             pass
 
                     elif holding.symbol == transaction.buy_symbol:
-                        print(f'      -> holding is transaction.buy_symbol')
+                        _logger.debug(f' |  holding is transaction.buy_symbol')
 
                         if transaction.ttype == 'buy':
                             #profit = transaction.pair.buy_spot.value
@@ -374,7 +359,7 @@ class Portfolio():
 
 
                 else:
-                    print(f'      -> spot: {transaction.spot}')
+                    _logger.debug(f' |  spot: {transaction.spot}')
                     profit = transaction.spot.profit
 
                     #if holding.symbol == transaction.spot.symbol:
@@ -389,8 +374,7 @@ class Portfolio():
 
                 holding.profit += profit
 
-                print(f'      -> holding({holding.symbol}): profit={profit}    hp={holding.profit}')
-            print() # TODO remove
+                _logger.debug(f' |  holding({holding.symbol}): profit={profit}    hp={holding.profit}')
 
     def _quotes_fees(self, quotes: Quotes, convert: str):
         # Fees
