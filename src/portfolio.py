@@ -222,51 +222,25 @@ class Portfolio():
 
                     cquote = quotes.get(convert, pair.buy_spot.symbol)
 
-                    print('------------------')
-                    print(f'-> pair.profit ttype: {transaction.ttype}')
-                    print(f'-> pair.profit cquote: {cquote}')
-                    print(f'-> pair.profit sell_spot.quantity: {pair.sell_spot.quantity}')
-                    print(f'-> pair.profit buy_spot.quantity: {pair.buy_spot.quantity}')
-
                     if transaction.ttype == 'buy':
-
                         pair.value = cquote * pair.buy_spot.quantity
                         pair.profit = pair.value - pair.sell_spot.quantity
 
-                        print(f'-> pair.profit pair.value: {pair.value}')
-                        print(f'-> pair.profit pair.profit: {pair.profit} (= {pair.value}(pair.value) - {pair.sell_spot.quantity}(sell_spot.quantity))')
-
                     elif transaction.ttype == 'sell':
-
                         pair.value = cquote * pair.buy_spot.quantity
                         pair.profit = pair.buy_spot.quantity - pair.value
-
-                        print(f'-> pair.profit pair.value: {pair.value}')
-                        print(f'-> pair.profit pair.profit: {pair.profit} (= {pair.buy_spot.quantity}(pair.buy_spot.quantity) - {pair.value}(pair.value))')
 
                 elif pair.buy_spot.symbol == convert:
                     cquote = quotes.get(convert, pair.buy_spot.symbol)
 
-                    print('------------------')
-                    print(f'-> pair.profit ttype: {transaction.ttype}')
-                    print(f'-> pair.profit cquote: {cquote}')
-
                     if transaction.ttype == 'buy':
                         pair.value = cquote * pair.buy_spot.quantity
                         pair.profit = pair.buy_spot.quantity - pair.value
 
-                        print(f'-> pair.profit pair.value: {pair.value}')
-                        print(f'-> pair.profit pair.profit: {pair.profit} (= {pair.buy_spot.quantity}(pair.buy_spot.quantity) - {pair.value}(pair.value))')
-
                     elif transaction.ttype == 'sell':
-
                         pair.value = cquote * pair.buy_spot.quantity
                         pair.profit = pair.value - pair.sell_spot.quantity
 
-                        print(f'-> pair.profit pair.value: {pair.value}')
-                        print(f'-> pair.profit pair.profit: {pair.profit} (= {pair.value}(pair.value) - {pair.sell_spot.quantity}(sell_spot.quantity))')
-
-                    #raise NotImplementedError(f'pair.buy_spot.symbol({pair.buy_spot.symbol}) == convert({convert})')
                 else:
                     squote = quotes.get(convert, pair.sell_spot.symbol)
                     bquote = quotes.get(convert, pair.buy_spot.symbol)
