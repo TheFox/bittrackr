@@ -1,5 +1,5 @@
 
-from spot import Holding
+from holding import Holding
 from transaction import Transaction
 
 def sort_holdings(item: tuple[str, Holding]):

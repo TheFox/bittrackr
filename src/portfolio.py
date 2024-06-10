@@ -4,7 +4,8 @@ from typing import cast
 from apptypes import ConvertSymbols
 from json_helper import ComplexEncoder
 from json import dumps
-from spot import Spot, Holding
+from spot import Spot
+from holding import Holding
 from pair import Pair
 from transaction import Transaction
 from quotes import Quotes
