@@ -185,7 +185,7 @@ class App():
             elif coin['direction'] == -1:
                 fg_color = fg.red
             else:
-                fg_color = fg.black
+                fg_color = rs.all
 
             row_s = fg_color + out_r
             print(row_s, end='', flush=True)

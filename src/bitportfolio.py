@@ -228,6 +228,11 @@ class App():
         return quotes
 
     def _print_portfolio(self, portfolio: Portfolio):
+        self._print_portfolio_holdings(portfolio)
+        self._print_portfolio_transactions(portfolio)
+        self._print_subportfolios(portfolio)
+
+    def _print_portfolio_holdings(self, portfolio: Portfolio):
         if portfolio.transactions_c == 0:
             return
 
@@ -239,7 +244,7 @@ class App():
             'quant': [],
             'quote': [],
             'value': [],
-            'profit': [],
+            'profit': [], # accumulated profit
             'trx': [],
         }
         sorted_holdings = sorted(portfolio.holdings.items(), key=sort_holdings, reverse=True)
@@ -304,6 +309,7 @@ class App():
             print()
             print(df_s)
 
+    def _print_portfolio_transactions(self, portfolio: Portfolio):
         if self.show_transactions:
             transactions = {
                 'date': [],
@@ -437,6 +443,7 @@ class App():
                 print()
                 print(df_s)
 
+    def _print_subportfolios(self, portfolio: Portfolio):
         nlevel = portfolio.level + 1
         if self.max_depth is not None and nlevel > self.max_depth:
             print(f'-> max depth reached: {nlevel}')
