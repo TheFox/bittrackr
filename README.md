@@ -3,13 +3,13 @@
 ## Quotes Ticker
 
 ```bash
-./bin/bittrackr.sh -c var/config.json -i 50 -u 60
+./bin/bittrackr.sh -c var/config.yml -i 50 -u 60
 ```
 
 ## Portfolio
 
 ```bash
-./bin/bitportfolio.sh -c var/config.json -d var/portfolios
+./bin/bitportfolio.sh -c var/config.yml -d var/portfolios
 ```
 
 ## Dev
@@ -17,7 +17,7 @@
 - <https://en.wikipedia.org/wiki/ANSI_escape_code>
 
 ```bash
-./src/bitportfolio.py -c var/config.json -qf ./var/quotes.json --load -d var/portfolios/ -t
+./src/bitportfolio.py -c var/config.yml -qf ./var/quotes.yml --load -d var/portfolios/ -t
 ```
 
 ```bash

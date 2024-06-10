@@ -7,6 +7,7 @@ import pandas as pd
 from logging import getLogger, basicConfig
 from typing import cast
 from argparse import ArgumentParser, BooleanOptionalAction
+from yaml import safe_load, dump as ydump
 from json import loads, load, dumps, dump
 from cmc import get_quotes as cmc_get_quotes
 from sty import fg, bg, ef, rs
@@ -63,7 +64,7 @@ class App():
             self.base_dir = Path(base_dir)
 
         if config_path is None:
-            self.config_path = self.change_dir / 'config.json'
+            self.config_path = self.change_dir / 'config.yml'
         else:
             self.config_path = Path(config_path)
 
@@ -74,7 +75,7 @@ class App():
 
         if self.config_path.exists():
             with open(self.config_path, 'r') as f:
-                self.config = loads(f.read())
+                self.config = safe_load(f)
 
         self.max_depth = max_depth
         self.filter_symbol = filter_symbol
@@ -102,7 +103,7 @@ class App():
             if self.load:
                 print(f'-> load quotes file: {self.quotes_file}')
                 with open(self.quotes_file, 'r') as f:
-                    quotes = Quotes(load(f))
+                    quotes = Quotes(safe_load(f))
                     load_quotes = True
 
         if not load_quotes:
@@ -112,7 +113,7 @@ class App():
             if self.save:
                 print(f'-> save quotes file: {self.quotes_file}')
                 with open(self.quotes_file, 'w') as f:
-                    dump(quotes.to_json(), f, indent=2)
+                    ydump(quotes.symbols, f, indent=2)
 
         portfolio.quotes(quotes, self.config['convert'])
         print('------------------')

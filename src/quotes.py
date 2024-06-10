@@ -7,9 +7,6 @@ class Quotes():
     def __init__(self, symbols: dict = {}) -> None:
         self.symbols = symbols
 
-    def to_json(self):
-        return self.symbols
-
     def add(self, convert: str, symbol: str, val: float):
         if convert not in self.symbols:
             self.symbols[convert] = {}
