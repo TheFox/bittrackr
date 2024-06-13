@@ -63,6 +63,8 @@ class Portfolio():
         self.subs.append(portfolio)
 
     def add_transaction(self, transaction: Transaction):
+        _logger.debug(f'add_transaction({self.name})')
+
         if self.parent is not None:
             self.parent.add_transaction(transaction)
 
@@ -72,7 +74,6 @@ class Portfolio():
         if transaction.fee is not None:
             self.add_fee(transaction.fee)
 
-        # print(f'-> add trx: {transaction}')
         if transaction.is_pair:
             ppair = self.add_pair(transaction.pair, transaction.ttype)
             ppair.add_transaction(transaction)
@@ -97,7 +98,7 @@ class Portfolio():
                 raise ValueError(f'Unknown Transaction type: {transaction.ttype}')
 
     def add_pair(self, tpair: Pair, ttype: str) -> Pair:
-        # print(f'-> add_pair({self.name},{tpair},{ttype})')
+        _logger.debug(f'add_pair({self.name},{tpair},{ttype})')
 
         if tpair.name in self.pairs:
             ppair = self.pairs[tpair.name]
@@ -127,6 +128,8 @@ class Portfolio():
         pfee.add_spot(fee)
 
     def calc(self):
+        _logger.debug(f'calc({self.name})')
+
         for sub_portfolio in self.subs:
             sub_portfolio.calc()
 
@@ -181,8 +184,6 @@ class Portfolio():
 
         # Pairs
         for pair_id, pair in self.pairs.items():
-            # print(f'-> pair {pair}')
-
             if pair.sell_spot.symbol != convert and pair.buy_spot.symbol != convert:
                 add(pair.sell_spot.symbol, pair.buy_spot.symbol)
 
@@ -194,27 +195,25 @@ class Portfolio():
 
         # Spots
         for ssym, spot in self.spots.items():
-            # print(f'-> spot: {ssym} {spot}')
             add(convert, spot.symbol)
 
         # Holdings
         for hsym, holding in self.holdings.items():
             if holding.symbol == convert:
                 continue
-            # print(f'-> quotes holding: {holding}')
             add(convert, holding.symbol)
 
         # Fees
         for fee_id, fee in self.fees.items():
             if fee.symbol == convert:
                 continue
-            # print(f'-> fee {fee_id} {fee}')
             add(convert, fee.symbol)
 
         return symbols
 
     def quotes(self, quotes: Quotes, convert: str):
         for sub_portfolio in self.subs:
+            _logger.debug(f'quotes({sub_portfolio.name})')
             sub_portfolio.quotes(quotes, convert)
 
         self._quotes_transactions(quotes, convert)
@@ -222,6 +221,8 @@ class Portfolio():
         self._quotes_fees(quotes, convert)
 
     def _quotes_transactions(self, quotes: Quotes, convert: str):
+        _logger.debug(f'quotes_transactions({self.name})')
+
         transactions = cast(list[Transaction], sorted(self.transactions, key=sort_transactions))
         for transaction in transactions:
 
@@ -275,7 +276,6 @@ class Portfolio():
 
                     pair.value = buy_value
 
-                    # print(f'    -> pair: {pair}')
                     _logger.debug(f'pair.sell_spot: {pair.sell_spot}')
                     _logger.debug(f'pair.buy_spot: {pair.buy_spot}')
 
@@ -297,12 +297,11 @@ class Portfolio():
                 else:
                     raise ValueError(f'Unknown Transaction type: {transaction.ttype}')
 
-                #raise NotImplementedError('not pair')
-                #print(f'-> spot.profit: {spot.profit}')
                 transaction.profit = spot.profit
-                #transaction.profit = 'not pair'
 
     def _quotes_holdings(self, quotes: Quotes, convert: str):
+        _logger.debug(f'quotes_holdings({self.name})')
+
         # Holdings
         for hsym, holding in self.holdings.items():
             if holding.symbol == convert:
@@ -378,6 +377,8 @@ class Portfolio():
                 _logger.debug(f' |  holding({holding.symbol}): profit={profit}    hp={holding.profit}')
 
     def _quotes_fees(self, quotes: Quotes, convert: str):
+        _logger.debug(f'quotes_fees({self.name})')
+
         # Fees
         for fee_id, fee in self.fees.items():
 

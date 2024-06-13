@@ -101,7 +101,7 @@ class App():
         load_quotes = False
         if self.quotes_file is not None:
             if self.load:
-                print(f'-> load quotes file: {self.quotes_file}')
+                _logger.info(f'load quotes file: {self.quotes_file}')
                 with open(self.quotes_file, 'r') as f:
                     quotes = Quotes(safe_load(f))
                     load_quotes = True
@@ -111,12 +111,11 @@ class App():
 
         if self.quotes_file is not None:
             if self.save:
-                print(f'-> save quotes file: {self.quotes_file}')
+                _logger.info(f'save quotes file: {self.quotes_file}')
                 with open(self.quotes_file, 'w') as f:
                     ydump(quotes.symbols, f, indent=2)
 
         portfolio.quotes(quotes, self.config['convert'])
-        print('------------------')
         self._print_portfolio(portfolio)
 
     def shutdown(self, reason: str):
@@ -191,6 +190,8 @@ class App():
         return portfolio
 
     def _get_quotes(self, symbols: ConvertSymbols, convert: str) -> Quotes:
+        _logger.debug('_get_quotes()')
+
         dp_config = self.config['data_provider']
         if dp_config['id'] == 'cmc':
             data_fetch_func = cmc_get_quotes
@@ -200,14 +201,17 @@ class App():
         quotes = Quotes()
 
         for convert, sym_list in symbols.items():
+            _logger.debug(f'fetch data: {convert} start')
             data = data_fetch_func(
                 api_host=dp_config['api']['host'],
                 api_key=dp_config['api']['key'],
                 convert=convert,
                 symbols=sym_list,
             )
+            _logger.debug(f'fetch data: {convert} done')
 
             for symbol in sym_list:
+                #print(f'-> process symbol: {symbol}')
                 if symbol in data['data']:
                     sdata = data['data'].get(symbol)
 
