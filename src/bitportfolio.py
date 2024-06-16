@@ -241,9 +241,6 @@ class App():
         if portfolio.transactions_c == 0:
             return
 
-        sell_symbols = ', '.join(list(portfolio.sell_symbols))
-        buy_symbols = ', '.join(list(portfolio.buy_symbols))
-
         holdings = {
             'sym': [],
             'quant': [],
@@ -280,11 +277,6 @@ class App():
         print('-' * self.terminal.columns)
         print(f'Portfolio: {portfolio.name} (level={portfolio.level})')
         print(f'Transactions: {portfolio.transactions_c}')
-
-        if sell_symbols != '':
-            print(f'Sell symbols: {sell_symbols}')
-        if buy_symbols != '':
-            print(f'Buy  symbols: {buy_symbols}')
 
         if costs_q >= 0.0:
             costs_color = fg.red
