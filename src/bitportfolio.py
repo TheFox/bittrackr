@@ -134,17 +134,12 @@ class App():
                 portfolio.add_portfolio(sub_portfolio)
 
             elif file.is_file():
-
                 raw_data = None
                 with open(file, 'r') as f:
                     if str(file).endswith('.json'):
                         raw_data = loads(f.read())
                     if str(file).endswith('.yml'):
                         raw_data = yaml.safe_load(f)
-
-                # print(f'--------- raw_data ---------')
-                # print(dumps(raw_data, indent=2, cls=ComplexEncoder))
-                # print('-------------------------')
 
                 if 'ignore' in raw_data:
                     if raw_data['ignore']:
@@ -211,7 +206,7 @@ class App():
             _logger.debug(f'fetch data: {convert} done')
 
             for symbol in sym_list:
-                #print(f'-> process symbol: {symbol}')
+                _logger.debug(f'sym_list for {convert}: {symbol}')
                 if symbol in data['data']:
                     sdata = data['data'].get(symbol)
 

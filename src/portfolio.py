@@ -330,47 +330,18 @@ class Portfolio():
                 profit = 0.0
 
                 if transaction.is_pair:
-
                     _logger.debug(f' |  sell_spot: {transaction.pair.sell_spot}')
-                    _logger.debug(f' |   buy_spot: {transaction.pair.buy_spot}')
+                    _logger.debug(f' |  buy_spot: {transaction.pair.buy_spot}')
 
                     profit = transaction.profit
 
                     if holding.symbol == transaction.sell_symbol:
-                        _logger.debug(f' |  holding is transaction.sell_symbol')
-
-                        if transaction.ttype == 'buy':
-                            #profit = -transaction.pair.sell_spot.value
-                            pass
-                        elif transaction.ttype == 'sell':
-                            #profit = transaction.pair.sell_spot.value
-                            pass
-
+                        _logger.debug(' |  holding is transaction.sell_symbol')
                     elif holding.symbol == transaction.buy_symbol:
-                        _logger.debug(f' |  holding is transaction.buy_symbol')
-
-                        if transaction.ttype == 'buy':
-                            #profit = transaction.pair.buy_spot.value
-                            pass
-                        elif transaction.ttype == 'sell':
-                            #profit = -transaction.pair.buy_spot.value
-                            pass
-
-
-
+                        _logger.debug(' |  holding is transaction.buy_symbol')
                 else:
                     _logger.debug(f' |  spot: {transaction.spot}')
                     profit = transaction.spot.profit
-
-                    #if holding.symbol == transaction.spot.symbol:
-                    #if holding.symbol == transaction.spot.symbol:
-
-                    # if transaction.ttype == 'in':
-                    #     profit = spot.profit
-                    # elif transaction.ttype == 'in':
-                    #     profit = -spot.profit
-
-
 
                 holding.profit += profit
 
