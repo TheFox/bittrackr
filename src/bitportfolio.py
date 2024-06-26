@@ -390,61 +390,63 @@ class App():
                 transactions['accu'].append(accumulated)
                 transactions['source'].append(transaction.source)
 
-            if len(transactions['pair']) > 0:
-                try:
-                    df = pd.DataFrame(data=transactions)
-                except ValueError as error:
-                    print('----- transactions -----')
-                    print(dumps(transactions, indent=2, cls=ComplexEncoder))
-                    print('------------------------')
+            if len(transactions['pair']) == 0:
+                return
 
-                    raise error
+            try:
+                df = pd.DataFrame(data=transactions)
+            except ValueError as error:
+                print('----- transactions -----')
+                print(dumps(transactions, indent=2, cls=ComplexEncoder))
+                print('------------------------')
 
-                df.style.format({
-                    'quote': '{:.2f}',
-                    'value': '{:.2f}',
-                    'profit': '{:.2f}',
-                })
+                raise error
 
-                df.rename(columns={'quote': f'quote({self.config["convert"]})'}, inplace=True)
-                df.rename(columns={'profit': f'profit({self.config["convert"]})'}, inplace=True)
-                df.rename(columns={'sellq': 'squant'}, inplace=True)
-                df.rename(columns={'sells': 'ssym'}, inplace=True)
-                df.rename(columns={'buyq': 'bquant'}, inplace=True)
-                df.rename(columns={'buys': 'bsym'}, inplace=True)
-                df.rename(columns={'sellv': f'sellv({self.config["convert"]})'}, inplace=True)
-                df.rename(columns={'buyv': f'buyv({self.config["convert"]})'}, inplace=True)
-                df.rename(columns={'spotv': f'spotv({self.config["convert"]})'}, inplace=True)
+            df.style.format({
+                'quote': '{:.2f}',
+                'value': '{:.2f}',
+                'profit': '{:.2f}',
+            })
 
-                df_cols = [
-                    'date',
-                    'type',
-                    'state',
-                    'pair',
-                    'quant',
-                    'price',
-                ]
-                if self.filter_symbol is None:
-                    df_cols += [f'quote({self.config["convert"]})']
-                df_cols += [
-                    f'profit({self.config["convert"]})',
-                    f'sellv({self.config["convert"]})',
-                    f'buyv({self.config["convert"]})',
-                    f'spotv({self.config["convert"]})',
-                    'ssym',
-                    'squant',
-                    'bsym',
-                    'bquant',
-                ]
+            df.rename(columns={'quote': f'quote({self.config["convert"]})'}, inplace=True)
+            df.rename(columns={'profit': f'profit({self.config["convert"]})'}, inplace=True)
+            df.rename(columns={'sellq': 'squant'}, inplace=True)
+            df.rename(columns={'sells': 'ssym'}, inplace=True)
+            df.rename(columns={'buyq': 'bquant'}, inplace=True)
+            df.rename(columns={'buys': 'bsym'}, inplace=True)
+            df.rename(columns={'sellv': f'sellv({self.config["convert"]})'}, inplace=True)
+            df.rename(columns={'buyv': f'buyv({self.config["convert"]})'}, inplace=True)
+            df.rename(columns={'spotv': f'spotv({self.config["convert"]})'}, inplace=True)
 
-                if self.filter_symbol is not None:
-                    df_cols.append('accu')
+            df_cols = [
+                'date',
+                'type',
+                'state',
+                'pair',
+                'quant',
+                'price',
+            ]
+            if self.filter_symbol is None:
+                df_cols += [f'quote({self.config["convert"]})']
+            df_cols += [
+                f'profit({self.config["convert"]})',
+                f'sellv({self.config["convert"]})',
+                f'buyv({self.config["convert"]})',
+                f'spotv({self.config["convert"]})',
+                'ssym',
+                'squant',
+                'bsym',
+                'bquant',
+            ]
 
-                df_cols.append('source')
+            if self.filter_symbol is not None:
+                df_cols.append('accu')
 
-                df_s = df.to_string(index=False, columns=df_cols)
-                print()
-                print(df_s)
+            df_cols.append('source')
+
+            df_s = df.to_string(index=False, columns=df_cols)
+            print()
+            print(df_s)
 
     def _print_subportfolios(self, portfolio: Portfolio):
         nlevel = portfolio.level + 1
