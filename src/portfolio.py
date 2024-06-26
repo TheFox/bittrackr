@@ -251,7 +251,7 @@ class Portfolio():
 
                     # Target
                     target_spot = Spot(s=pair.sell_spot.symbol)
-                    if transaction.target:
+                    if transaction.target_f:
                         target_spot.value = cquote - transaction.target_f
 
                 elif pair.buy_spot.symbol == convert:
@@ -291,7 +291,6 @@ class Portfolio():
                     target_spot = Spot(s=pair.sell_spot.symbol)
                     if transaction.target:
                         target_spot.value = cquote - transaction.target_f
-                        # target_spot.value = transaction.target - buy_quote
 
 
                 transaction.profit = pair.profit

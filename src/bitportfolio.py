@@ -159,6 +159,10 @@ class App():
                         if 'ignore' in pair and pair['ignore']:
                             continue
 
+                        state = None
+                        if 'state' in pair:
+                            state = pair['state']
+
                         for transaction_j in pair['transactions']:
                             transaction_o = Transaction(
                                 source=source['source'],
@@ -168,6 +172,13 @@ class App():
 
                             if transaction_o.ignore:
                                 continue
+
+                            if state is not None and transaction_o.state is None:
+                                transaction_o.state = state
+
+                            if transaction_o.state is None:
+                                if transaction_o.ttype == 'buy':
+                                    transaction_o.state = 'open'
 
                             handle_trx = True
 
@@ -334,7 +345,11 @@ class App():
 
                 transactions['date'].append(transaction.date)
                 transactions['type'].append(transaction.ttype)
-                transactions['state'].append(transaction.state)
+
+                if transaction.state is None:
+                    transactions['state'].append('---')
+                else:
+                    transactions['state'].append(transaction.state)
 
                 if transaction.is_pair:
                     transactions['pair'].append(transaction.pair.name)
