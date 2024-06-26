@@ -311,7 +311,7 @@ class App():
                 'quant': [],
                 'price': [], # transaction price
                 'quote': [], # current symbol price
-                'value': [],
+                # 'value': [],
                 'profit': [],
                 'sells': [],
                 'sellq': [],
@@ -319,6 +319,9 @@ class App():
                 'buyq': [],
                 'accu': [],
                 'source': [],
+                'sellv': [],
+                'buyv': [],
+                'spotv': [],
             }
 
             accumulated = 0.0
@@ -336,8 +339,10 @@ class App():
                     transactions['quant'].append(transaction.pair.buy_spot.quantity)
                     transactions['price'].append(transaction.price)
                     transactions['quote'].append(transaction.cprice)
-                    transactions['value'].append(transaction.pair.value)
                     transactions['profit'].append(transaction.profit)
+                    transactions['sellv'].append(transaction.pair.sell_spot.value)
+                    transactions['buyv'].append(transaction.pair.buy_spot.value)
+                    transactions['spotv'].append('---')
 
                     if transaction.ttype == 'buy':
 
@@ -373,12 +378,14 @@ class App():
                     transactions['quant'].append(transaction.spot.quantity)
                     transactions['price'].append('---')
                     transactions['quote'].append(transaction.spot.price)
-                    transactions['value'].append(transaction.spot.value)
                     transactions['profit'].append('---')
                     transactions['sellq'].append('---')
                     transactions['sells'].append('---')
                     transactions['buyq'].append('---')
                     transactions['buys'].append('---')
+                    transactions['sellv'].append('---')
+                    transactions['buyv'].append('---')
+                    transactions['spotv'].append(transaction.spot.value)
 
                 transactions['accu'].append(accumulated)
                 transactions['source'].append(transaction.source)
@@ -400,12 +407,14 @@ class App():
                 })
 
                 df.rename(columns={'quote': f'quote({self.config["convert"]})'}, inplace=True)
-                df.rename(columns={'value': f'value({self.config["convert"]})'}, inplace=True)
                 df.rename(columns={'profit': f'profit({self.config["convert"]})'}, inplace=True)
                 df.rename(columns={'sellq': 'squant'}, inplace=True)
                 df.rename(columns={'sells': 'ssym'}, inplace=True)
                 df.rename(columns={'buyq': 'bquant'}, inplace=True)
                 df.rename(columns={'buys': 'bsym'}, inplace=True)
+                df.rename(columns={'sellv': f'sellv({self.config["convert"]})'}, inplace=True)
+                df.rename(columns={'buyv': f'buyv({self.config["convert"]})'}, inplace=True)
+                df.rename(columns={'spotv': f'spotv({self.config["convert"]})'}, inplace=True)
 
                 df_cols = [
                     'date',
@@ -418,8 +427,10 @@ class App():
                 if self.filter_symbol is None:
                     df_cols += [f'quote({self.config["convert"]})']
                 df_cols += [
-                    'value(EUR)',
-                    'profit(EUR)',
+                    f'profit({self.config["convert"]})',
+                    f'sellv({self.config["convert"]})',
+                    f'buyv({self.config["convert"]})',
+                    f'spotv({self.config["convert"]})',
                     'ssym',
                     'squant',
                     'bsym',
