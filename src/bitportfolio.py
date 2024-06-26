@@ -313,7 +313,6 @@ class App():
                 'quant': [],
                 'price': [], # transaction price
                 'quote': [], # current symbol price
-                # 'value': [],
                 'profit': [],
                 'sells': [],
                 'sellq': [],

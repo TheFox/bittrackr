@@ -318,8 +318,8 @@ class Portfolio():
             holding.value = quote * holding.quantity
             holding.profit = 0.0
 
-            sorted_holdings = cast(list[Transaction], sorted(holding.transactions, key=sort_transactions))
-            for transaction in sorted_holdings:
+            sorted_transactions = cast(list[Transaction], sorted(holding.transactions, key=sort_transactions))
+            for transaction in sorted_transactions:
 
                 _logger.debug(f'transaction: {transaction.date} {transaction.ttype} {transaction.pair_s}')
                 _logger.debug(f' |  price: {transaction.price}')
