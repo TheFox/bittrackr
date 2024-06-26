@@ -323,6 +323,7 @@ class App():
                 'sellv': [],
                 'buyv': [],
                 'spotv': [],
+                'target': [],
             }
 
             accumulated = 0.0
@@ -344,6 +345,11 @@ class App():
                     transactions['sellv'].append(transaction.pair.sell_spot.value)
                     transactions['buyv'].append(transaction.pair.buy_spot.value)
                     transactions['spotv'].append('---')
+
+                    if transaction.target_spot is not None and transaction.target_spot.value is not None:
+                        transactions['target'].append(transaction.target_spot.value)
+                    else:
+                        transactions['target'].append('---')
 
                     if transaction.ttype == 'buy':
 
@@ -387,6 +393,7 @@ class App():
                     transactions['sellv'].append('---')
                     transactions['buyv'].append('---')
                     transactions['spotv'].append(transaction.spot.value)
+                    transactions['target'].append('---')
 
                 transactions['accu'].append(accumulated)
                 transactions['source'].append(transaction.source)
@@ -443,6 +450,7 @@ class App():
             if self.filter_symbol is not None:
                 df_cols.append('accu')
 
+            df_cols.append('target')
             df_cols.append('source')
 
             df_s = df.to_string(index=False, columns=df_cols)

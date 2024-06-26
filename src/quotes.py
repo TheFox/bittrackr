@@ -21,7 +21,7 @@ class Quotes():
             return 1.0
 
         if convert not in self.symbols:
-            raise ValueError(f'convert not found in quotes: {convert}')
+            raise ValueError(f'convert not found in quotes: {convert}: {self.symbols.keys()}')
 
         if symbol not in self.symbols[convert]:
             raise ValueError(f'symbol not found in quotes: convert={convert} symbol={symbol}')

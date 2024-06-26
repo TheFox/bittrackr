@@ -22,6 +22,9 @@ class Transaction():
     profit: float|None
     state: str|None
     ignore: bool|None
+    target: str|None
+    target_f: float|None
+    target_spot: Spot|None
 
     def __init__(self, source: str, pair: str, d: dict):
         self.source = source
@@ -39,6 +42,8 @@ class Transaction():
         self.profit = None
         self.state = None
         self.ignore = None
+        self.target = None
+        self.target_spot = None
 
         if '/' in self.pair_s:
             self.is_pair = True
@@ -54,6 +59,9 @@ class Transaction():
             setattr(self, key, value)
 
         self.ttype = getattr(self, 'type')
+
+        if self.target is not None:
+            self.target_f = float(self.target)
 
         if self.fee is not None:
             if len(self.fee) == 2:

@@ -233,6 +233,7 @@ class Portfolio():
 
                 _logger.debug(f'transaction: {transaction.ttype} {transaction.date}')
 
+                target_spot: Spot = None
                 if pair.sell_spot.symbol == convert:
                     cquote = quotes.get(convert, pair.buy_spot.symbol)
                     _logger.debug(f'cquote: {cquote} ({pair.buy_spot.symbol})')
@@ -248,11 +249,18 @@ class Portfolio():
                         pair.profit = pair.sell_spot.quantity - pair.value
                         _logger.debug(f'profit B: {pair.profit}(profit) = {pair.sell_spot.quantity}(sell_spot.quantity) - {pair.value}(value)')
 
+                    # Target
+                    target_spot = Spot(s=pair.sell_spot.symbol)
+                    if transaction.target:
+                        target_spot.value = cquote - transaction.target_f
+
                 elif pair.buy_spot.symbol == convert:
                     raise NotImplementedError()
 
                 else:
 
+                    cquote = quotes.get(pair.sell_spot.symbol, pair.buy_spot.symbol)
+                    _logger.debug(f'cquote: {cquote}')
                     sell_quote = quotes.get(convert, pair.sell_spot.symbol)
                     _logger.debug(f'sell_quote: {sell_quote}')
                     buy_quote = quotes.get(convert, pair.buy_spot.symbol)
@@ -279,8 +287,18 @@ class Portfolio():
                     _logger.debug(f'pair.sell_spot: {pair.sell_spot}')
                     _logger.debug(f'pair.buy_spot: {pair.buy_spot}')
 
+                    # Target
+                    target_spot = Spot(s=pair.sell_spot.symbol)
+                    if transaction.target:
+                        target_spot.value = cquote - transaction.target_f
+                        # target_spot.value = transaction.target - buy_quote
+
 
                 transaction.profit = pair.profit
+
+                # Target
+                if transaction.state == 'open':
+                    transaction.target_spot = target_spot
 
             else:
                 spot = transaction.spot
