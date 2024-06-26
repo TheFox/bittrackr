@@ -289,17 +289,19 @@ class App():
         print(f'Value:  {total_value:>10.2f} {self.config["convert"]}')
         print(f'Profit: {profit_color}{profit:>10.2f} {self.config["convert"]}{rs.all}')
 
-        if len(holdings['sym']) > 0:
-            df = pd.DataFrame(data=holdings)
+        if len(holdings['sym']) == 0:
+            return
 
-            df.rename(columns={'price': f'price({self.config["convert"]})'}, inplace=True)
-            df.rename(columns={'quote': f'quote({self.config["convert"]})'}, inplace=True)
-            df.rename(columns={'value': f'value({self.config["convert"]})'}, inplace=True)
-            df.rename(columns={'profit': f'profit({self.config["convert"]})'}, inplace=True)
+        df = pd.DataFrame(data=holdings)
 
-            df_s = df.to_string(index=False)
-            print()
-            print(df_s)
+        df.rename(columns={'price': f'price({self.config["convert"]})'}, inplace=True)
+        df.rename(columns={'quote': f'quote({self.config["convert"]})'}, inplace=True)
+        df.rename(columns={'value': f'value({self.config["convert"]})'}, inplace=True)
+        df.rename(columns={'profit': f'profit({self.config["convert"]})'}, inplace=True)
+
+        df_s = df.to_string(index=False)
+        print()
+        print(df_s)
 
     def _print_portfolio_transactions(self, portfolio: Portfolio):
         if self.show_transactions:
