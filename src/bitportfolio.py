@@ -295,7 +295,9 @@ class App():
             profit_color = fg.red
 
         print(f'Fees:   {portfolio.fee_value:>10.2f} {self.config["convert"]}')
-        if portfolio.costs is not None:
+        if portfolio.costs is None:
+            print(f'Costs:  {0:>10.2f} N/A')
+        else:
             print(f'Costs:  {costs_color}{costs_q:>10.2f} {portfolio.costs.symbol}{rs.all}')
         print(f'Value:  {total_value:>10.2f} {self.config["convert"]}')
         print(f'Profit: {profit_color}{profit:>10.2f} {self.config["convert"]}{rs.all}')
