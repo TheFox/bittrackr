@@ -1,15 +1,13 @@
 
 from logging import getLogger
-from typing import cast
+from typing import Optional, cast
 from apptypes import ConvertSymbols
-from json_helper import ComplexEncoder
-from json import dumps
 from spot import Spot
 from holding import Holding
 from pair import Pair
 from transaction import Transaction
 from quotes import Quotes
-from helper import sort_holdings, sort_transactions
+from helper import sort_transactions
 
 _logger = getLogger(f'app.{__name__}')
 
@@ -27,7 +25,7 @@ class Portfolio():
     pairs: dict[str, Pair]
     spots: dict[str, Spot]
     holdings: dict[str, Holding]
-    costs: Spot|None
+    costs: Optional[Spot]
 
     def __init__(self, name: str, parent: 'Portfolio' = None):
         self.name = name

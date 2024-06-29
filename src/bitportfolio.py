@@ -8,9 +8,9 @@ from logging import getLogger, basicConfig
 from typing import cast
 from argparse import ArgumentParser, BooleanOptionalAction
 from yaml import safe_load, dump as ydump
-from json import loads, load, dumps, dump
+from json import loads, dumps
 from cmc import get_quotes as cmc_get_quotes
-from sty import fg, bg, ef, rs
+from sty import fg, rs
 from pathlib import Path
 from portfolio import Portfolio
 from transaction import Transaction
