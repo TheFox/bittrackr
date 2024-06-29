@@ -249,6 +249,12 @@ class Portfolio():
                         pair.profit = pair.sell_spot.quantity - pair.value
                         _logger.debug(f'profit B: {pair.profit}(profit) = {pair.sell_spot.quantity}(sell_spot.quantity) - {pair.value}(value)')
 
+                    pair.sell_spot.value = pair.sell_spot.quantity
+                    pair.buy_spot.value = cquote * pair.buy_spot.quantity
+
+                    _logger.debug(f'pair.sell_spot: {pair.sell_spot}')
+                    _logger.debug(f'pair.buy_spot: {pair.buy_spot}')
+
                     # Target
                     target_spot = Spot(s=pair.sell_spot.symbol)
                     if transaction.target_f:
