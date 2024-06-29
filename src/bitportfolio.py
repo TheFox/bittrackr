@@ -489,6 +489,7 @@ def main():
     pd.set_option('display.max_rows', None)
 
     parser = ArgumentParser(prog='bitportfolio', description='BitPortfolio')
+    #parser.add_argument('command', type=str, nargs='?', help='Command', default='portfolio')
     parser.add_argument('--log-level', type=str, nargs='?', required=False, help='Log Level', default='WARN')
     parser.add_argument('-c', '--config', type=str, nargs='?', required=False, help='Path to Config File')
     parser.add_argument('-d', '--basedir', type=str, nargs='?', required=False, help='Path to directory')
@@ -502,6 +503,7 @@ def main():
     parser.add_argument('--sell', action=BooleanOptionalAction, help='Show only sell Transactions')
     parser.add_argument('--load', action=BooleanOptionalAction, help='Load Quotes file')
     parser.add_argument('--save', action=BooleanOptionalAction, help='Save Quotes file')
+    # parser.add_argument('--add', action=BooleanOptionalAction, help='Add Transactions to Portfolio')
 
     args = parser.parse_args()
     # print(args)
