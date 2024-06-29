@@ -342,6 +342,7 @@ class App():
         }
 
         accumulated = 0.0
+        show_target = False
 
         sorted_transactions = sorted(portfolio.transactions, key=lambda t: t.date)
         sorted_transactions = cast(list[Transaction], sorted_transactions)
@@ -367,6 +368,7 @@ class App():
 
                 if transaction.target_spot is not None and transaction.target_spot.value is not None:
                     transactions['target'].append(transaction.target_spot.value)
+                    show_target = True
                 else:
                     transactions['target'].append('---')
 
@@ -469,7 +471,8 @@ class App():
         if self.filter_symbol is not None:
             df_cols.append('accu')
 
-        df_cols.append('target')
+        if show_target:
+            df_cols.append('target')
         df_cols.append('source')
 
         df_s = df.to_string(index=False, columns=df_cols)
