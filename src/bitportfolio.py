@@ -317,162 +317,164 @@ class App():
         print(df_s)
 
     def _print_portfolio_transactions(self, portfolio: Portfolio):
-        if self.show_transactions:
-            transactions = {
-                'date': [],
-                'type': [],
-                'state': [],
-                'pair': [],
-                'quant': [],
-                'price': [], # transaction price
-                'quote': [], # current symbol price
-                'profit': [],
-                'sells': [],
-                'sellq': [],
-                'buys': [],
-                'buyq': [],
-                'accu': [],
-                'source': [],
-                'sellv': [],
-                'buyv': [],
-                'spotv': [],
-                'target': [],
-            }
+        if not self.show_transactions:
+            return
 
-            accumulated = 0.0
+        transactions = {
+            'date': [],
+            'type': [],
+            'state': [],
+            'pair': [],
+            'quant': [],
+            'price': [], # transaction price
+            'quote': [], # current symbol price
+            'profit': [],
+            'sells': [],
+            'sellq': [],
+            'buys': [],
+            'buyq': [],
+            'accu': [],
+            'source': [],
+            'sellv': [],
+            'buyv': [],
+            'spotv': [],
+            'target': [],
+        }
 
-            sorted_transactions = sorted(portfolio.transactions, key=lambda t: t.date)
-            sorted_transactions = cast(list[Transaction], sorted_transactions)
-            for transaction in sorted_transactions:
+        accumulated = 0.0
 
-                transactions['date'].append(transaction.date)
-                transactions['type'].append(transaction.ttype)
+        sorted_transactions = sorted(portfolio.transactions, key=lambda t: t.date)
+        sorted_transactions = cast(list[Transaction], sorted_transactions)
+        for transaction in sorted_transactions:
 
-                if transaction.state is None:
-                    transactions['state'].append('---')
+            transactions['date'].append(transaction.date)
+            transactions['type'].append(transaction.ttype)
+
+            if transaction.state is None:
+                transactions['state'].append('---')
+            else:
+                transactions['state'].append(transaction.state)
+
+            if transaction.is_pair:
+                transactions['pair'].append(transaction.pair.name)
+                transactions['quant'].append(transaction.pair.buy_spot.quantity)
+                transactions['price'].append(transaction.price)
+                transactions['quote'].append(transaction.cprice)
+                transactions['profit'].append(transaction.profit)
+                transactions['sellv'].append(transaction.pair.sell_spot.value)
+                transactions['buyv'].append(transaction.pair.buy_spot.value)
+                transactions['spotv'].append('---')
+
+                if transaction.target_spot is not None and transaction.target_spot.value is not None:
+                    transactions['target'].append(transaction.target_spot.value)
                 else:
-                    transactions['state'].append(transaction.state)
-
-                if transaction.is_pair:
-                    transactions['pair'].append(transaction.pair.name)
-                    transactions['quant'].append(transaction.pair.buy_spot.quantity)
-                    transactions['price'].append(transaction.price)
-                    transactions['quote'].append(transaction.cprice)
-                    transactions['profit'].append(transaction.profit)
-                    transactions['sellv'].append(transaction.pair.sell_spot.value)
-                    transactions['buyv'].append(transaction.pair.buy_spot.value)
-                    transactions['spotv'].append('---')
-
-                    if transaction.target_spot is not None and transaction.target_spot.value is not None:
-                        transactions['target'].append(transaction.target_spot.value)
-                    else:
-                        transactions['target'].append('---')
-
-                    if transaction.ttype == 'buy':
-
-                        if self.filter_symbol is not None:
-                            if self.filter_symbol == transaction.pair.buy_spot.symbol:
-                                accumulated += transaction.pair.buy_spot.quantity
-
-                        transactions['sellq'].append(transaction.pair.sell_spot.quantity)
-                        transactions['sells'].append(transaction.pair.sell_spot.symbol)
-                        transactions['buyq'].append(transaction.pair.buy_spot.quantity)
-                        transactions['buys'].append(transaction.pair.buy_spot.symbol)
-
-                    elif transaction.ttype == 'sell':
-
-                        if self.filter_symbol is not None:
-                            if self.filter_symbol == transaction.pair.buy_spot.symbol:
-                                accumulated -= transaction.pair.buy_spot.quantity
-
-                        transactions['sellq'].append(transaction.pair.buy_spot.quantity)
-                        transactions['sells'].append(transaction.pair.buy_spot.symbol)
-                        transactions['buyq'].append(transaction.pair.sell_spot.quantity)
-                        transactions['buys'].append(transaction.pair.sell_spot.symbol)
-
-                    else:
-                        raise ValueError(f'Unknown Transaction type: {transaction.ttype}')
-                else:
-                    if transaction.ttype == 'in':
-                        accumulated += transaction.spot.quantity
-                    elif transaction.ttype == 'out':
-                        accumulated -= transaction.spot.quantity
-
-                    transactions['pair'].append(transaction.spot.symbol)
-                    transactions['quant'].append(transaction.spot.quantity)
-                    transactions['price'].append('---')
-                    transactions['quote'].append(transaction.spot.price)
-                    transactions['profit'].append('---')
-                    transactions['sellq'].append('---')
-                    transactions['sells'].append('---')
-                    transactions['buyq'].append('---')
-                    transactions['buys'].append('---')
-                    transactions['sellv'].append('---')
-                    transactions['buyv'].append('---')
-                    transactions['spotv'].append(transaction.spot.value)
                     transactions['target'].append('---')
 
-                transactions['accu'].append(accumulated)
-                transactions['source'].append(transaction.source)
+                if transaction.ttype == 'buy':
 
-            if len(transactions['pair']) == 0:
-                return
+                    if self.filter_symbol is not None:
+                        if self.filter_symbol == transaction.pair.buy_spot.symbol:
+                            accumulated += transaction.pair.buy_spot.quantity
 
-            try:
-                df = pd.DataFrame(data=transactions)
-            except ValueError as error:
-                print('----- transactions -----')
-                print(dumps(transactions, indent=2, cls=ComplexEncoder))
-                print('------------------------')
+                    transactions['sellq'].append(transaction.pair.sell_spot.quantity)
+                    transactions['sells'].append(transaction.pair.sell_spot.symbol)
+                    transactions['buyq'].append(transaction.pair.buy_spot.quantity)
+                    transactions['buys'].append(transaction.pair.buy_spot.symbol)
 
-                raise error
+                elif transaction.ttype == 'sell':
 
-            df.style.format({
-                'quote': '{:.2f}',
-                'value': '{:.2f}',
-                'profit': '{:.2f}',
-            })
+                    if self.filter_symbol is not None:
+                        if self.filter_symbol == transaction.pair.buy_spot.symbol:
+                            accumulated -= transaction.pair.buy_spot.quantity
 
-            df.rename(columns={'quote': f'quote({self.config["convert"]})'}, inplace=True)
-            df.rename(columns={'profit': f'profit({self.config["convert"]})'}, inplace=True)
-            df.rename(columns={'sellq': 'squant'}, inplace=True)
-            df.rename(columns={'sells': 'ssym'}, inplace=True)
-            df.rename(columns={'buyq': 'bquant'}, inplace=True)
-            df.rename(columns={'buys': 'bsym'}, inplace=True)
-            df.rename(columns={'sellv': f'sellv({self.config["convert"]})'}, inplace=True)
-            df.rename(columns={'buyv': f'buyv({self.config["convert"]})'}, inplace=True)
-            df.rename(columns={'spotv': f'spotv({self.config["convert"]})'}, inplace=True)
+                    transactions['sellq'].append(transaction.pair.buy_spot.quantity)
+                    transactions['sells'].append(transaction.pair.buy_spot.symbol)
+                    transactions['buyq'].append(transaction.pair.sell_spot.quantity)
+                    transactions['buys'].append(transaction.pair.sell_spot.symbol)
 
-            df_cols = [
-                'date',
-                'type',
-                'state',
-                'pair',
-                'quant',
-                'price',
-            ]
-            if self.filter_symbol is None:
-                df_cols += [f'quote({self.config["convert"]})']
-            df_cols += [
-                f'profit({self.config["convert"]})',
-                f'sellv({self.config["convert"]})',
-                f'buyv({self.config["convert"]})',
-                f'spotv({self.config["convert"]})',
-                'ssym',
-                'squant',
-                'bsym',
-                'bquant',
-            ]
+                else:
+                    raise ValueError(f'Unknown Transaction type: {transaction.ttype}')
+            else:
+                if transaction.ttype == 'in':
+                    accumulated += transaction.spot.quantity
+                elif transaction.ttype == 'out':
+                    accumulated -= transaction.spot.quantity
 
-            if self.filter_symbol is not None:
-                df_cols.append('accu')
+                transactions['pair'].append(transaction.spot.symbol)
+                transactions['quant'].append(transaction.spot.quantity)
+                transactions['price'].append('---')
+                transactions['quote'].append(transaction.spot.price)
+                transactions['profit'].append('---')
+                transactions['sellq'].append('---')
+                transactions['sells'].append('---')
+                transactions['buyq'].append('---')
+                transactions['buys'].append('---')
+                transactions['sellv'].append('---')
+                transactions['buyv'].append('---')
+                transactions['spotv'].append(transaction.spot.value)
+                transactions['target'].append('---')
 
-            df_cols.append('target')
-            df_cols.append('source')
+            transactions['accu'].append(accumulated)
+            transactions['source'].append(transaction.source)
 
-            df_s = df.to_string(index=False, columns=df_cols)
-            print()
-            print(df_s)
+        if len(transactions['pair']) == 0:
+            return
+
+        try:
+            df = pd.DataFrame(data=transactions)
+        except ValueError as error:
+            print('----- transactions -----')
+            print(dumps(transactions, indent=2, cls=ComplexEncoder))
+            print('------------------------')
+
+            raise error
+
+        df.style.format({
+            'quote': '{:.2f}',
+            'value': '{:.2f}',
+            'profit': '{:.2f}',
+        })
+
+        df.rename(columns={'quote': f'quote({self.config["convert"]})'}, inplace=True)
+        df.rename(columns={'profit': f'profit({self.config["convert"]})'}, inplace=True)
+        df.rename(columns={'sellq': 'squant'}, inplace=True)
+        df.rename(columns={'sells': 'ssym'}, inplace=True)
+        df.rename(columns={'buyq': 'bquant'}, inplace=True)
+        df.rename(columns={'buys': 'bsym'}, inplace=True)
+        df.rename(columns={'sellv': f'sellv({self.config["convert"]})'}, inplace=True)
+        df.rename(columns={'buyv': f'buyv({self.config["convert"]})'}, inplace=True)
+        df.rename(columns={'spotv': f'spotv({self.config["convert"]})'}, inplace=True)
+
+        df_cols = [
+            'date',
+            'type',
+            'state',
+            'pair',
+            'quant',
+            'price',
+        ]
+        if self.filter_symbol is None:
+            df_cols += [f'quote({self.config["convert"]})']
+        df_cols += [
+            f'profit({self.config["convert"]})',
+            f'sellv({self.config["convert"]})',
+            f'buyv({self.config["convert"]})',
+            f'spotv({self.config["convert"]})',
+            'ssym',
+            'squant',
+            'bsym',
+            'bquant',
+        ]
+
+        if self.filter_symbol is not None:
+            df_cols.append('accu')
+
+        df_cols.append('target')
+        df_cols.append('source')
+
+        df_s = df.to_string(index=False, columns=df_cols)
+        print()
+        print(df_s)
 
     def _print_subportfolios(self, portfolio: Portfolio):
         nlevel = portfolio.level + 1
