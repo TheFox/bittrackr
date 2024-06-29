@@ -343,6 +343,7 @@ class App():
 
         accumulated = 0.0
         show_target = False
+        show_spotv = False
 
         sorted_transactions = sorted(portfolio.transactions, key=lambda t: t.date)
         sorted_transactions = cast(list[Transaction], sorted_transactions)
@@ -416,6 +417,8 @@ class App():
                 transactions['spotv'].append(transaction.spot.value)
                 transactions['target'].append('---')
 
+                show_spotv = True
+
             transactions['accu'].append(accumulated)
             transactions['source'].append(transaction.source)
 
@@ -461,7 +464,10 @@ class App():
             f'profit({self.config["convert"]})',
             f'sellv({self.config["convert"]})',
             f'buyv({self.config["convert"]})',
-            f'spotv({self.config["convert"]})',
+        ]
+        if show_spotv:
+            df_cols += [f'spotv({self.config["convert"]})']
+        df_cols += [
             'ssym',
             'squant',
             'bsym',
