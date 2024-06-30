@@ -38,8 +38,10 @@ class App():
                  max_depth: int|None = None,
                  filter_symbol: str|None = None,
                  filter_ttype: bool|None = None,
+                 filter_open: bool|None = None,
                  load: bool|None = None,
-                 save: bool|None = None):
+                 save: bool|None = None,
+                 ):
 
         logConfig = {
             'level': log_level,
@@ -82,6 +84,7 @@ class App():
         self.filter_ttype = filter_ttype
         self.load = load
         self.save = save
+        self.filter_open = filter_open
 
         self.holding_minimum_amount = 0.0
         self.holding_minimum_ignore = []
@@ -180,17 +183,21 @@ class App():
                                 if transaction_o.ttype == 'buy':
                                     transaction_o.state = 'open'
 
-                            handle_trx = True
+                            add_trx = True
 
                             if self.filter_symbol is not None:
                                 if transaction_o.sell_symbol != self.filter_symbol and transaction_o.buy_symbol != self.filter_symbol and (transaction_o.spot is not None and transaction_o.spot.symbol != self.filter_symbol or transaction_o.spot is None):
-                                    handle_trx = False
+                                    add_trx = False
 
                             if self.filter_ttype is not None:
                                 if transaction_o.ttype != self.filter_ttype:
-                                    handle_trx = False
+                                    add_trx = False
 
-                            if handle_trx:
+                            if self.filter_open is not None:
+                                if transaction_o.state != 'open':
+                                    add_trx = False
+
+                            if add_trx:
                                 portfolio.add_transaction(transaction_o)
 
         return portfolio
@@ -515,7 +522,6 @@ def main():
     pd.set_option('display.max_rows', None)
 
     parser = ArgumentParser(prog='bitportfolio', description='BitPortfolio')
-    #parser.add_argument('command', type=str, nargs='?', help='Command', default='portfolio')
     parser.add_argument('--log-level', type=str, nargs='?', required=False, help='Log Level', default='WARN')
     parser.add_argument('-c', '--config', type=str, nargs='?', required=False, help='Path to Config File')
     parser.add_argument('-d', '--basedir', type=str, nargs='?', required=False, help='Path to directory')
@@ -527,9 +533,9 @@ def main():
     parser.add_argument('-s', '--symbol', type=str, nargs='?', required=False, help='Handle only Transactions with given symbol')
     parser.add_argument('--buy', action=BooleanOptionalAction, help='Show only buy Transactions')
     parser.add_argument('--sell', action=BooleanOptionalAction, help='Show only sell Transactions')
+    parser.add_argument('--open', action=BooleanOptionalAction, help='Show only open Transactions')
     parser.add_argument('--load', action=BooleanOptionalAction, help='Load Quotes file')
     parser.add_argument('--save', action=BooleanOptionalAction, help='Save Quotes file')
-    # parser.add_argument('--add', action=BooleanOptionalAction, help='Add Transactions to Portfolio')
 
     args = parser.parse_args()
     # print(args)
@@ -551,6 +557,7 @@ def main():
         max_depth=args.max_depth,
         filter_symbol=args.symbol,
         filter_ttype=filter_ttype,
+        filter_open=args.open,
         load=args.load,
         save=args.save,
     )
