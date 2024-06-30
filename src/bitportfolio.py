@@ -39,6 +39,7 @@ class App():
                  filter_symbol: str|None = None,
                  filter_ttype: bool|None = None,
                  filter_open: bool|None = None,
+                 filter_closed: bool|None = None,
                  load: bool|None = None,
                  save: bool|None = None,
                  ):
@@ -82,9 +83,10 @@ class App():
         self.max_depth = max_depth
         self.filter_symbol = filter_symbol
         self.filter_ttype = filter_ttype
+        self.filter_open = filter_open
+        self.filter_closed = filter_closed
         self.load = load
         self.save = save
-        self.filter_open = filter_open
 
         self.holding_minimum_amount = 0.0
         self.holding_minimum_ignore = []
@@ -195,6 +197,10 @@ class App():
 
                             if self.filter_open is not None:
                                 if transaction_o.state != 'open':
+                                    add_trx = False
+
+                            if self.filter_closed is not None:
+                                if transaction_o.state != 'closed':
                                     add_trx = False
 
                             if add_trx:
@@ -532,8 +538,9 @@ def main():
     parser.add_argument('-m', '--max-depth', type=int, nargs='?', required=False, help='Max directory depth')
     parser.add_argument('-s', '--symbol', type=str, nargs='?', required=False, help='Handle only Transactions with given symbol')
     parser.add_argument('-b', '--buy', action=BooleanOptionalAction, help='Show only buy Transactions')
-    parser.add_argument('-s', '--sell', action=BooleanOptionalAction, help='Show only sell Transactions')
+    parser.add_argument('--sell', action=BooleanOptionalAction, help='Show only sell Transactions')
     parser.add_argument('-o', '--open', action=BooleanOptionalAction, help='Show only open Transactions')
+    parser.add_argument('-x', '--closed', action=BooleanOptionalAction, help='Show only closed Transactions')
     parser.add_argument('-l', '--load', action=BooleanOptionalAction, help='Load Quotes file')
     parser.add_argument('--save', action=BooleanOptionalAction, help='Save Quotes file')
 
@@ -558,6 +565,7 @@ def main():
         filter_symbol=args.symbol,
         filter_ttype=filter_ttype,
         filter_open=args.open,
+        filter_closed=args.closed,
         load=args.load,
         save=args.save,
     )
