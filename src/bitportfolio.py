@@ -357,6 +357,9 @@ class App():
         accumulated = 0.0
         show_target = False
         show_spotv = False
+        show_profit = False
+        show_sellv = False
+        show_buyv = False
 
         sorted_transactions = sorted(portfolio.transactions, key=lambda t: t.date)
         sorted_transactions = cast(list[Transaction], sorted_transactions)
@@ -390,6 +393,10 @@ class App():
                     transactions['profit'].append(transaction.profit)
                     transactions['sellv'].append(transaction.pair.sell_spot.value)
                     transactions['buyv'].append(transaction.pair.buy_spot.value)
+
+                    show_profit = True
+                    show_sellv = True
+                    show_buyv = True
                 transactions['spotv'].append('---')
 
                 if transaction.target_spot is not None and transaction.target_spot.value is not None:
@@ -486,11 +493,12 @@ class App():
         ]
         if self.filter_symbol is None:
             df_cols += [f'quote({self.config["convert"]})']
-        df_cols += [
-            f'profit({self.config["convert"]})',
-            f'sellv({self.config["convert"]})',
-            f'buyv({self.config["convert"]})',
-        ]
+        if show_profit:
+            df_cols += [f'profit({self.config["convert"]})']
+        if show_sellv:
+            df_cols += [f'sellv({self.config["convert"]})']
+        if show_buyv:
+            df_cols += [f'buyv({self.config["convert"]})']
         if show_spotv:
             df_cols += [f'spotv({self.config["convert"]})']
         df_cols += [
