@@ -349,6 +349,13 @@ class App():
         sorted_transactions = cast(list[Transaction], sorted_transactions)
         for transaction in sorted_transactions:
 
+            hide = False
+            if transaction.ttype == 'buy':
+                if transaction.state == 'closed':
+                    hide = True
+            elif transaction.ttype == 'sell':
+                hide = True
+
             transactions['date'].append(transaction.date)
             transactions['type'].append(transaction.ttype)
 
@@ -362,9 +369,14 @@ class App():
                 transactions['quant'].append(transaction.pair.buy_spot.quantity)
                 transactions['price'].append(transaction.price)
                 transactions['quote'].append(transaction.cprice)
-                transactions['profit'].append(transaction.profit)
-                transactions['sellv'].append(transaction.pair.sell_spot.value)
-                transactions['buyv'].append(transaction.pair.buy_spot.value)
+                if hide:
+                    transactions['profit'].append('---')
+                    transactions['sellv'].append('---')
+                    transactions['buyv'].append('---')
+                else:
+                    transactions['profit'].append(transaction.profit)
+                    transactions['sellv'].append(transaction.pair.sell_spot.value)
+                    transactions['buyv'].append(transaction.pair.buy_spot.value)
                 transactions['spotv'].append('---')
 
                 if transaction.target_spot is not None and transaction.target_spot.value is not None:
@@ -406,7 +418,8 @@ class App():
                 transactions['pair'].append(transaction.spot.symbol)
                 transactions['quant'].append(transaction.spot.quantity)
                 transactions['price'].append('---')
-                transactions['quote'].append(transaction.spot.price)
+                #transactions['quote'].append(transaction.spot.price)
+                transactions['quote'].append('???')
                 transactions['profit'].append('---')
                 transactions['sellq'].append('---')
                 transactions['sells'].append('---')
