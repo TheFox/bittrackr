@@ -12,6 +12,15 @@
 ./bin/bitportfolio.sh -c var/config.yml -d var/portfolios
 ```
 
+### Transaction Types
+
+| Type | Purpose |
+|---|---|
+| `buy` | Bought a specific amount |
+| `sell` | Sold a specific amount |
+| `buy-order` | Open Take Profit Buy Order |
+| `sell-order` | Open Take Profit Sell Order |
+
 ## Dev
 
 - <https://en.wikipedia.org/wiki/ANSI_escape_code>

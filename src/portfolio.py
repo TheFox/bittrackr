@@ -93,7 +93,7 @@ class Portfolio():
             elif transaction.ttype == 'out':
                 spot.sub_spot(transaction.spot)
             else:
-                raise ValueError(f'Unknown Transaction type: {transaction.ttype}')
+                raise ValueError(f'Unknown Transaction type for add transaction to portfolio: {transaction.ttype}')
 
     def add_pair(self, tpair: Pair, ttype: str) -> Pair:
         _logger.debug(f'add_pair({self.name},{tpair},{ttype})')
@@ -111,8 +111,12 @@ class Portfolio():
             ppair.add_buy(tpair)
         elif ttype == 'sell':
             ppair.add_sell(tpair)
+        elif ttype == 'buy-order':
+            pass
+        elif ttype == 'sell-order':
+            pass
         else:
-            raise ValueError(f'Unknown Transaction type: {ttype}')
+            raise ValueError(f'Unknown Transaction type add pair to portfolio: {ttype}')
 
         return ppair
 
@@ -316,7 +320,7 @@ class Portfolio():
                 elif transaction.ttype == 'out':
                     spot.profit *= -1
                 else:
-                    raise ValueError(f'Unknown Transaction type: {transaction.ttype}')
+                    raise ValueError(f'Unknown Transaction type non-pair: {transaction.ttype}')
 
                 transaction.profit = spot.profit
 
@@ -354,7 +358,8 @@ class Portfolio():
                     _logger.debug(f' |  sell_spot: {transaction.pair.sell_spot}')
                     _logger.debug(f' |  buy_spot: {transaction.pair.buy_spot}')
 
-                    profit = transaction.profit
+                    if transaction.profit is not None:
+                        profit = transaction.profit
 
                     if holding.symbol == transaction.sell_symbol:
                         _logger.debug(' |  holding is transaction.sell_symbol')

@@ -184,6 +184,10 @@ class App():
                             if transaction_o.state is None:
                                 if transaction_o.ttype == 'buy':
                                     transaction_o.state = 'open'
+                                elif transaction_o.ttype == 'buy-order':
+                                    transaction_o.state = 'open'
+                                elif transaction_o.ttype == 'sell-order':
+                                    transaction_o.state = 'open'
 
                             add_trx = True
 
@@ -390,7 +394,10 @@ class App():
                     transactions['sellv'].append('---')
                     transactions['buyv'].append('---')
                 else:
-                    transactions['profit'].append(transaction.profit)
+                    if transaction.profit is None:
+                        transactions['profit'].append('---')
+                    else:
+                        transactions['profit'].append(transaction.profit)
                     transactions['sellv'].append(transaction.pair.sell_spot.value)
                     transactions['buyv'].append(transaction.pair.buy_spot.value)
 
@@ -406,29 +413,29 @@ class App():
                     transactions['target'].append('---')
 
                 if transaction.ttype == 'buy':
-
                     if self.filter_symbol is not None:
                         if self.filter_symbol == transaction.pair.buy_spot.symbol:
                             accumulated += transaction.pair.buy_spot.quantity
 
+                elif transaction.ttype == 'sell':
+                    if self.filter_symbol is not None:
+                        if self.filter_symbol == transaction.pair.buy_spot.symbol:
+                            accumulated -= transaction.pair.buy_spot.quantity
+
+                if transaction.ttype == 'buy' or transaction.ttype == 'buy-order':
                     transactions['sellq'].append(transaction.pair.sell_spot.quantity)
                     transactions['sells'].append(transaction.pair.sell_spot.symbol)
                     transactions['buyq'].append(transaction.pair.buy_spot.quantity)
                     transactions['buys'].append(transaction.pair.buy_spot.symbol)
 
-                elif transaction.ttype == 'sell':
-
-                    if self.filter_symbol is not None:
-                        if self.filter_symbol == transaction.pair.buy_spot.symbol:
-                            accumulated -= transaction.pair.buy_spot.quantity
-
+                elif transaction.ttype == 'sell' or transaction.ttype == 'sell-order':
                     transactions['sellq'].append(transaction.pair.buy_spot.quantity)
                     transactions['sells'].append(transaction.pair.buy_spot.symbol)
                     transactions['buyq'].append(transaction.pair.sell_spot.quantity)
                     transactions['buys'].append(transaction.pair.sell_spot.symbol)
 
                 else:
-                    raise ValueError(f'Unknown Transaction type: {transaction.ttype}')
+                    raise ValueError(f'Unknown Transaction type for print portfolio transactions: {transaction.ttype}')
             else:
                 if transaction.ttype == 'in':
                     accumulated += transaction.spot.quantity

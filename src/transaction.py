@@ -1,6 +1,7 @@
 
 from spot import Spot
 from pair import Pair
+import datetime
 
 class Transaction():
     source: str
@@ -88,6 +89,10 @@ class Transaction():
             self.spot = Spot(s=self.pair_s, q=self.quantity)
 
         # print(f'self={self}')
+
+        if self.ttype == 'buy-order' or self.ttype == 'sell-order':
+            year = datetime.datetime.now().year
+            self.date = f'{year}-12-31 23:59'
 
     def __repr__(self):
         return f'Transaction[{self.pair_s},t={self.ttype},p={self.pair},s={self.spot}]'
