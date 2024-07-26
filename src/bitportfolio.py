@@ -168,6 +168,9 @@ class App():
                         if 'state' in pair:
                             state = pair['state']
 
+                        if 'transactions' not in pair:
+                            continue
+
                         for transaction_j in pair['transactions']:
                             transaction_o = Transaction(
                                 source=source['source'],
