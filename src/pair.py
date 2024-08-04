@@ -1,4 +1,5 @@
 
+from typing import Optional
 from spot import Spot
 
 class Pair():
@@ -7,8 +8,8 @@ class Pair():
     buy_spot: Spot
     transactions: list
 
-    value: float|None
-    profit: float|None
+    value: Optional[float]
+    profit: Optional[float]
 
     def __init__(self, name: str = None):
         self.name = name

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import signal
+from signal import signal, SIGINT
 from logging import getLogger, basicConfig
 from typing import Optional
 from argparse import ArgumentParser, BooleanOptionalAction
@@ -11,7 +11,7 @@ _logger = getLogger(f'app.{__name__}')
 
 class App():
     show_transactions: bool
-    data_provider_id: str|None
+    data_provider_id: Optional[str]
     config: dict
     running: bool
 
@@ -168,7 +168,7 @@ def main():
             log_level=args.log_level,
         )
 
-    signal.signal(signal.SIGINT, lambda sig, frame: app.shutdown('SIGINT'))
+    signal(SIGINT, lambda sig, frame: app.shutdown('SIGINT'))
 
     try:
         app.run()

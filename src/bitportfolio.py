@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
-import yaml
-import signal
-import shutil
 import pandas as pd
+from shutil import get_terminal_size
+from signal import signal, SIGINT
 from logging import getLogger, basicConfig
-from typing import cast
+from typing import Optional, cast
 from argparse import ArgumentParser, BooleanOptionalAction
 from yaml import safe_load, dump as ydump
 from json import loads, dumps
@@ -23,25 +22,25 @@ _logger = getLogger(f'app.{__name__}')
 
 class App():
     show_transactions: bool
-    data_provider_id: str|None
+    data_provider_id: Optional[str]
     config: dict
     running: bool
 
     def __init__(self,
                  log_level: str = 'INFO',
-                 base_dir: str|None = None,
-                 config_path: str|None = None,
+                 base_dir: Optional[str] = None,
+                 config_path: Optional[str] = None,
                  show_transactions: bool = False,
                  data_provider_id: str = 'cmc',
-                 quotes_file: str|None = None,
-                 change_dir: str|None = None,
-                 max_depth: int|None = None,
-                 filter_symbol: str|None = None,
-                 filter_ttype: bool|None = None,
-                 filter_open: bool|None = None,
-                 filter_closed: bool|None = None,
-                 load: bool|None = None,
-                 save: bool|None = None,
+                 quotes_file: Optional[str] = None,
+                 change_dir: Optional[str] = None,
+                 max_depth: Optional[int] = None,
+                 filter_symbol: Optional[str] = None,
+                 filter_ttype: Optional[bool] = None,
+                 filter_open: Optional[bool] = None,
+                 filter_closed: Optional[bool] = None,
+                 load: Optional[bool] = None,
+                 save: Optional[bool] = None,
                  ):
 
         logConfig = {
@@ -50,7 +49,7 @@ class App():
         }
         basicConfig(**logConfig)
 
-        self.terminal = shutil.get_terminal_size((80, 20))
+        self.terminal = get_terminal_size((80, 20))
 
         self.running = False
         self.show_transactions = show_transactions
@@ -129,7 +128,7 @@ class App():
 
         self.running = False
 
-    def _traverse(self, dir: Path, parent: Portfolio|None = None, level: int = 0) -> Portfolio:
+    def _traverse(self, dir: Path, parent: Optional[Portfolio] = None, level: int = 0) -> Portfolio:
         portfolio = Portfolio(name=dir.name, parent=parent)
 
         for file in dir.iterdir():
@@ -144,7 +143,7 @@ class App():
                     if str(file).endswith('.json'):
                         raw_data = loads(f.read())
                     if str(file).endswith('.yml'):
-                        raw_data = yaml.safe_load(f)
+                        raw_data = safe_load(f)
 
                 if 'ignore' in raw_data:
                     if raw_data['ignore']:
@@ -587,7 +586,7 @@ def main():
         save=args.save,
     )
 
-    signal.signal(signal.SIGINT, lambda sig, frame: app.shutdown('SIGINT'))
+    signal(SIGINT, lambda sig, frame: app.shutdown('SIGINT'))
 
     try:
         app.run()

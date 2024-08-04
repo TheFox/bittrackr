@@ -1,31 +1,32 @@
 
+from typing import Optional
 from spot import Spot
 from pair import Pair
-import datetime
+from datetime import datetime
 
 class Transaction():
     source: str
     pair_s: str
     symbol: str
-    sell_symbol: str|None
-    buy_symbol: str|None
-    date: str|None
-    ttype: str|None
-    price: float|None
-    cprice: float|None
+    sell_symbol: Optional[str]
+    buy_symbol: Optional[str]
+    date: Optional[str]
+    ttype: Optional[str]
+    price: Optional[float]
+    cprice: Optional[float]
     quantity: float
-    fee: Spot|None
-    location: str|None
-    note: str|None
-    pair: Pair|None
+    fee: Optional[Spot]
+    location: Optional[str]
+    note: Optional[str]
+    pair: Optional[Pair]
     is_pair: bool
-    spot: Spot|None
-    profit: float|None
-    state: str|None
-    ignore: bool|None
-    target: str|None
-    target_f: float|None
-    target_spot: Spot|None
+    spot: Optional[Spot]
+    profit: Optional[float]
+    state: Optional[str]
+    ignore: Optional[bool]
+    target: Optional[str]
+    target_f: Optional[float]
+    target_spot: Optional[Spot]
 
     def __init__(self, source: str, pair: str, d: dict):
         self.source = source
@@ -91,7 +92,7 @@ class Transaction():
         # print(f'self={self}')
 
         if self.ttype == 'buy-order' or self.ttype == 'sell-order':
-            year = datetime.datetime.now().year
+            year = datetime.now().year
             self.date = f'{year}-12-31 23:59'
 
     def __repr__(self):

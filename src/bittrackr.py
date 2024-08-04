@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
-import signal
-import argparse
-import shutil
+from signal import signal, SIGINT
+from argparse import ArgumentParser
+from shutil import get_terminal_size
 from json import loads
 from time import sleep
+from typing import Optional
 from cmc import get_quotes as cmc_get_quotes
-from sty import fg, bg, ef, rs
+from sty import fg, rs
 from datetime import datetime
 
 CLEAR_SCREEN='\033[2J'
@@ -30,7 +31,7 @@ class App():
     data: dict
     screen: dict
 
-    def __init__(self, config_path: str|None, scenario: str = 'all', update_interval: int|None = None, max_updates: int|None = None):
+    def __init__(self, config_path: Optional[str], scenario: str = 'all', update_interval: Optional[int] = None, max_updates: Optional[int] = None):
         print(f'-> config path: {config_path}')
         if config_path is None:
             self.config = self._default_config()
@@ -73,7 +74,7 @@ class App():
                 },
             }
 
-        terminal = shutil.get_terminal_size((80, 20))
+        terminal = get_terminal_size((80, 20))
         self.screen = {
             'lines': terminal.lines,
             'columns': terminal.columns,
@@ -219,7 +220,7 @@ class App():
         }
 
 def main():
-    parser = argparse.ArgumentParser(prog='bittrackr', description='BitTrackr')
+    parser = ArgumentParser(prog='bittrackr', description='BitTrackr')
     parser.add_argument('-c', '--config', type=str, nargs='?', required=False, help='Path to Config File', default='var/config.yml')
     parser.add_argument('-s', '--scenario', type=str, nargs='?', required=False, help='Scenario', default='all')
     parser.add_argument('-i', '--update-interval', type=int, nargs='?', required=False, help='Overwrite update_interval in config', default=120)
@@ -235,7 +236,7 @@ def main():
         max_updates=args.max_updates,
     )
 
-    signal.signal(signal.SIGINT, lambda sig, frame: app.shutdown('SIGINT'))
+    signal(SIGINT, lambda sig, frame: app.shutdown('SIGINT'))
 
     try:
         app.run()
