@@ -15,8 +15,8 @@ class Transaction():
     price: Optional[float]
     cprice: Optional[float]
     quantity: float
+    cost: Optional[float]
     fee: Optional[Spot]
-    location: Optional[str]
     note: Optional[str]
     pair: Optional[Pair]
     is_pair: bool
@@ -27,19 +27,23 @@ class Transaction():
     target: Optional[str]
     target_f: Optional[float]
     target_spot: Optional[Spot]
+    close_date: Optional[str]
 
     def __init__(self, source: str, pair: str, d: dict):
         self.source = source
         self.pair_s = pair
+        self.sell_symbol = None
+        self.buy_symbol = None
         self.date = None
         self.ttype = None
         self.price = None
         self.cprice = None
         self.quantity = None
+        self.cost = None
         self.fee = None
-        self.location = None
         self.note = None
         self.pair = None
+        self.is_pair = None
         self.spot = None
         self.profit = None
         self.state = None
@@ -47,6 +51,7 @@ class Transaction():
         self.target = None
         self.target_f = None
         self.target_spot = None
+        self.close_date = None
 
         if '/' in self.pair_s:
             self.is_pair = True

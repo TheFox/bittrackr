@@ -1,2 +1,4 @@
 sty>=1.0.0
 pandas>=2.2.2
+debugpy==1.8.1
+requests>=2.32.3

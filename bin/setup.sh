@@ -16,6 +16,7 @@ if [[ -d ./.venv ]]; then
 fi
 
 echo '-> installing requirements'
+pip install --upgrade pip
 if ! pip3 install -r requirements.txt ; then
 	echo 'ERROR: could not install requirements'
 	exit 1
